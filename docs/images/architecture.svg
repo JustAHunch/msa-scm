@@ -1,0 +1,244 @@
+<svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            .title { font: bold 24px sans-serif; fill: #2c3e50; }
+            .subtitle { font: bold 16px sans-serif; fill: #34495e; }
+            .text { font: 13px sans-serif; fill: #2c3e50; }
+            .small-text { font: 11px sans-serif; fill: #7f8c8d; }
+
+            .infra-box { fill: #f39c12; stroke: #e67e22; stroke-width: 2; }
+            .oms-box { fill: #3498db; stroke: #2980b9; stroke-width: 2; }
+            .wms-box { fill: #2ecc71; stroke: #27ae60; stroke-width: 2; }
+            .tms-box { fill: #e74c3c; stroke: #c0392b; stroke-width: 2; }
+            .common-box { fill: #9b59b6; stroke: #8e44ad; stroke-width: 2; }
+            .db-box { fill: #1abc9c; stroke: #16a085; stroke-width: 2; }
+            .kafka-box { fill: #f1c40f; stroke: #f39c12; stroke-width: 2; }
+            .monitor-box { fill: #95a5a6; stroke: #7f8c8d; stroke-width: 2; }
+
+            .arrow { stroke: #34495e; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+            .event-arrow { stroke: #f39c12; stroke-width: 2; stroke-dasharray: 5,5; fill: none; marker-end: url(#arrowhead-event); }
+        </style>
+
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#34495e" />
+        </marker>
+        <marker id="arrowhead-event" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#f39c12" />
+        </marker>
+    </defs>
+
+    <!-- Title -->
+    <text x="700" y="35" class="title" text-anchor="middle">MSA-SCM 아키텍처 (현재 상태)</text>
+
+    <!-- Infrastructure Layer -->
+    <g id="infrastructure">
+        <text x="50" y="75" class="subtitle" fill="#e67e22">인프라 레이어</text>
+
+        <!-- Eureka Server -->
+        <rect x="50" y="85" width="200" height="70" class="infra-box" rx="5"/>
+        <text x="150" y="110" class="text" text-anchor="middle" fill="white">Eureka Server</text>
+        <text x="150" y="128" class="small-text" text-anchor="middle" fill="white">서비스 디스커버리</text>
+        <text x="150" y="143" class="small-text" text-anchor="middle" fill="white">포트: 8761</text>
+
+        <!-- API Gateway -->
+        <rect x="270" y="85" width="200" height="70" class="infra-box" rx="5"/>
+        <text x="370" y="110" class="text" text-anchor="middle" fill="white">API Gateway</text>
+        <text x="370" y="128" class="small-text" text-anchor="middle" fill="white">라우팅, 로드밸런싱</text>
+        <text x="370" y="143" class="small-text" text-anchor="middle" fill="white">포트: 8080</text>
+
+        <!-- Config Server -->
+        <rect x="490" y="85" width="200" height="70" class="infra-box" rx="5"/>
+        <text x="590" y="110" class="text" text-anchor="middle" fill="white">Config Server</text>
+        <text x="590" y="128" class="small-text" text-anchor="middle" fill="white">중앙 설정 관리</text>
+        <text x="590" y="143" class="small-text" text-anchor="middle" fill="white">포트: 8888</text>
+    </g>
+
+    <!-- Business Services -->
+    <g id="business-services">
+        <text x="50" y="195" class="subtitle" fill="#2c3e50">비즈니스 서비스 (엔티티 레이어 완료)</text>
+
+        <!-- OMS -->
+        <g id="oms">
+            <rect x="50" y="210" width="180" height="140" class="oms-box" rx="5"/>
+            <text x="140" y="230" class="text" text-anchor="middle" fill="white">주문 서비스</text>
+            <text x="140" y="248" class="small-text" text-anchor="middle" fill="white">✓ 4개 엔티티</text>
+            <text x="140" y="263" class="small-text" text-anchor="middle" fill="white">Order, OrderItem</text>
+            <text x="140" y="278" class="small-text" text-anchor="middle" fill="white">Customer, Address</text>
+            <text x="140" y="298" class="small-text" text-anchor="middle" fill="white" font-weight="bold">포트: 8081</text>
+            <rect x="60" y="310" width="160" height="30" class="db-box" rx="3"/>
+            <text x="140" y="330" class="small-text" text-anchor="middle" fill="white">PostgreSQL: 5432</text>
+        </g>
+
+        <g id="inventory">
+            <rect x="250" y="210" width="180" height="140" class="oms-box" rx="5"/>
+            <text x="340" y="230" class="text" text-anchor="middle" fill="white">재고 서비스</text>
+            <text x="340" y="248" class="small-text" text-anchor="middle" fill="white">✓ 2개 엔티티</text>
+            <text x="340" y="263" class="small-text" text-anchor="middle" fill="white">Inventory</text>
+            <text x="340" y="278" class="small-text" text-anchor="middle" fill="white">StockMovement</text>
+            <text x="340" y="298" class="small-text" text-anchor="middle" fill="white" font-weight="bold">포트: 8082</text>
+            <rect x="260" y="310" width="160" height="30" class="db-box" rx="3"/>
+            <text x="340" y="330" class="small-text" text-anchor="middle" fill="white">PostgreSQL: 5433</text>
+        </g>
+
+        <!-- WMS -->
+        <g id="wms">
+            <rect x="450" y="210" width="180" height="140" class="wms-box" rx="5"/>
+            <text x="540" y="230" class="text" text-anchor="middle" fill="white">창고 서비스</text>
+            <text x="540" y="248" class="small-text" text-anchor="middle" fill="white">✓ 8개 엔티티</text>
+            <text x="540" y="263" class="small-text" text-anchor="middle" fill="white">Warehouse, Zone</text>
+            <text x="540" y="278" class="small-text" text-anchor="middle" fill="white">InboundOrder, Picking...</text>
+            <text x="540" y="298" class="small-text" text-anchor="middle" fill="white" font-weight="bold">포트: 8084</text>
+            <rect x="460" y="310" width="160" height="30" class="db-box" rx="3"/>
+            <text x="540" y="330" class="small-text" text-anchor="middle" fill="white">PostgreSQL: 5434</text>
+        </g>
+
+        <!-- TMS -->
+        <g id="tms">
+            <rect x="650" y="210" width="180" height="140" class="tms-box" rx="5"/>
+            <text x="740" y="230" class="text" text-anchor="middle" fill="white">배송 서비스</text>
+            <text x="740" y="248" class="small-text" text-anchor="middle" fill="white">✓ 5개 엔티티</text>
+            <text x="740" y="263" class="small-text" text-anchor="middle" fill="white">DeliveryOrder, Route</text>
+            <text x="740" y="278" class="small-text" text-anchor="middle" fill="white">Vehicle, Driver</text>
+            <text x="740" y="298" class="small-text" text-anchor="middle" fill="white" font-weight="bold">포트: 8087</text>
+            <rect x="660" y="310" width="160" height="30" class="db-box" rx="3"/>
+            <text x="740" y="330" class="small-text" text-anchor="middle" fill="white">PostgreSQL: 5435</text>
+        </g>
+    </g>
+
+    <!-- Common Services -->
+    <g id="common-services">
+        <text x="50" y="385" class="subtitle" fill="#8e44ad">공통 서비스</text>
+
+        <g id="common">
+            <rect x="50" y="400" width="180" height="140" class="common-box" rx="5"/>
+            <text x="140" y="420" class="text" text-anchor="middle" fill="white">공통 서비스</text>
+            <text x="140" y="438" class="small-text" text-anchor="middle" fill="white">✓ 사용자 관리</text>
+            <text x="140" y="453" class="small-text" text-anchor="middle" fill="white">User, Role</text>
+            <text x="140" y="468" class="small-text" text-anchor="middle" fill="white">+ Security 설정</text>
+            <text x="140" y="488" class="small-text" text-anchor="middle" fill="white" font-weight="bold">포트: 8090</text>
+            <rect x="60" y="500" width="160" height="30" class="db-box" rx="3"/>
+            <text x="140" y="520" class="small-text" text-anchor="middle" fill="white">PostgreSQL: 5436</text>
+        </g>
+
+        <g id="notification">
+            <rect x="250" y="400" width="180" height="140" class="common-box" rx="5"/>
+            <text x="340" y="420" class="text" text-anchor="middle" fill="white">알림 서비스</text>
+            <text x="340" y="438" class="small-text" text-anchor="middle" fill="white">✓ 2개 엔티티</text>
+            <text x="340" y="453" class="small-text" text-anchor="middle" fill="white">Notification</text>
+            <text x="340" y="468" class="small-text" text-anchor="middle" fill="white">NotificationTemplate</text>
+            <text x="340" y="488" class="small-text" text-anchor="middle" fill="white" font-weight="bold">포트: 8091</text>
+            <rect x="260" y="500" width="160" height="30" class="db-box" rx="3"/>
+            <text x="340" y="520" class="small-text" text-anchor="middle" fill="white">Redis: 6379</text>
+        </g>
+
+        <g id="analytics">
+            <rect x="450" y="400" width="180" height="140" class="common-box" rx="5"/>
+            <text x="540" y="420" class="text" text-anchor="middle" fill="white">분석 서비스</text>
+            <text x="540" y="438" class="small-text" text-anchor="middle" fill="white">✓ 3개 도큐먼트</text>
+            <text x="540" y="453" class="small-text" text-anchor="middle" fill="white">OrderAnalytics</text>
+            <text x="540" y="468" class="small-text" text-anchor="middle" fill="white">DeliveryPerformance...</text>
+            <text x="540" y="488" class="small-text" text-anchor="middle" fill="white" font-weight="bold">포트: 8092</text>
+            <rect x="460" y="500" width="160" height="30" class="db-box" rx="3"/>
+            <text x="540" y="520" class="small-text" text-anchor="middle" fill="white">MongoDB: 27017</text>
+        </g>
+    </g>
+
+    <!-- Event Streaming -->
+    <g id="event-streaming">
+        <rect x="50" y="580" width="780" height="80" class="kafka-box" rx="5"/>
+        <text x="440" y="605" class="text" text-anchor="middle" fill="white" font-weight="bold">Apache Kafka 클러스터 (이벤트 스트리밍 허브)</text>
+        <text x="440" y="625" class="small-text" text-anchor="middle" fill="white">토픽: order.events, inventory.events, delivery.events</text>
+        <text x="440" y="643" class="small-text" text-anchor="middle" fill="white">포트: Kafka 9092, Zookeeper 2181, Kafka UI 8989</text>
+    </g>
+
+    <!-- Monitoring & Observability -->
+    <g id="monitoring">
+        <text x="890" y="75" class="subtitle" fill="#7f8c8d">모니터링</text>
+
+        <rect x="890" y="85" width="170" height="55" class="monitor-box" rx="5"/>
+        <text x="975" y="108" class="text" text-anchor="middle" fill="white">Zipkin</text>
+        <text x="975" y="126" class="small-text" text-anchor="middle" fill="white">포트: 9411</text>
+
+        <rect x="890" y="150" width="170" height="55" class="monitor-box" rx="5"/>
+        <text x="975" y="173" class="text" text-anchor="middle" fill="white">Prometheus</text>
+        <text x="975" y="191" class="small-text" text-anchor="middle" fill="white">포트: 9090</text>
+
+        <rect x="890" y="215" width="170" height="55" class="monitor-box" rx="5"/>
+        <text x="975" y="238" class="text" text-anchor="middle" fill="white">Grafana</text>
+        <text x="975" y="256" class="small-text" text-anchor="middle" fill="white">포트: 3001</text>
+
+        <rect x="1080" y="85" width="170" height="55" class="monitor-box" rx="5"/>
+        <text x="1165" y="108" class="text" text-anchor="middle" fill="white">Kafka UI</text>
+        <text x="1165" y="126" class="small-text" text-anchor="middle" fill="white">포트: 8989</text>
+    </g>
+
+    <!-- Arrows -->
+    <!-- Services to Eureka -->
+    <path d="M 140 210 L 140 165" class="arrow"/>
+    <path d="M 340 210 L 200 165" class="arrow"/>
+    <path d="M 540 210 L 180 165" class="arrow"/>
+    <path d="M 740 210 L 180 165" class="arrow"/>
+
+    <!-- Services to Kafka -->
+    <path d="M 140 350 L 140 580" class="event-arrow"/>
+    <path d="M 340 350 L 340 580" class="event-arrow"/>
+    <path d="M 540 350 L 440 580" class="event-arrow"/>
+    <path d="M 740 350 L 460 580" class="event-arrow"/>
+
+    <!-- API Gateway -->
+    <path d="M 370 40 L 370 85" class="arrow"/>
+    <text x="380" y="75" class="small-text" fill="#34495e">클라이언트 요청</text>
+
+    <!-- Legend -->
+    <g id="legend" transform="translate(890, 300)">
+        <text x="0" y="0" class="subtitle" fill="#2c3e50">상태 범례</text>
+
+        <rect x="0" y="10" width="15" height="15" fill="#2ecc71" stroke="#27ae60" stroke-width="1"/>
+        <text x="22" y="22" class="small-text">✓ 엔티티 레이어 완료</text>
+
+        <rect x="0" y="35" width="15" height="15" fill="#f39c12" stroke="#e67e22" stroke-width="1"/>
+        <text x="22" y="47" class="small-text">⏳ 진행 중</text>
+
+        <line x1="0" y1="65" x2="40" y2="65" stroke="#f39c12" stroke-width="2" stroke-dasharray="5,5"/>
+        <text x="50" y="70" class="small-text">이벤트 흐름 (Kafka)</text>
+    </g>
+
+    <!-- Project Info -->
+    <g id="info" transform="translate(890, 400)">
+        <text x="0" y="0" class="subtitle" fill="#2c3e50">기술 스택</text>
+
+        <text x="0" y="20" class="small-text">• Spring Boot 3.4.1</text>
+        <text x="0" y="38" class="small-text">• Spring Cloud 2023.0.3</text>
+        <text x="0" y="56" class="small-text">• Gradle 8.11.1</text>
+        <text x="0" y="74" class="small-text">• PostgreSQL (6개 DB)</text>
+        <text x="0" y="92" class="small-text">• MongoDB (분석용)</text>
+        <text x="0" y="110" class="small-text">• Redis (캐시)</text>
+        <text x="0" y="128" class="small-text">• Apache Kafka + Zookeeper</text>
+    </g>
+
+    <!-- Implementation Status -->
+    <g id="status" transform="translate(50, 710)">
+        <rect x="0" y="0" width="1300" height="160" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="2" rx="5"/>
+
+        <text x="20" y="30" class="subtitle" fill="#2c3e50">현재 구현 상태</text>
+
+        <text x="20" y="55" class="text" font-weight="bold">완료</text>
+        <text x="40" y="75" class="small-text">• Gradle 멀티 모듈 프로젝트 구조 (9개 모듈)</text>
+        <text x="40" y="92" class="small-text">• 인프라 서비스: Eureka Server, API Gateway, Config Server</text>
+        <text x="40" y="109" class="small-text">• 모든 비즈니스 서비스의 엔티티 레이어 (22개 엔티티 + 3개 MongoDB 도큐먼트)</text>
+        <text x="40" y="126" class="small-text">• Docker Compose 구성 (PostgreSQL × 6, MongoDB, Redis, Kafka, 모니터링)</text>
+        <text x="40" y="143" class="small-text">• 포괄적인 문서화 (아키텍처, 코딩 규칙, 커밋 규칙)</text>
+
+        <text x="680" y="55" class="text" font-weight="bold">예정</text>
+        <text x="700" y="75" class="small-text">• Repository 및 Service 레이어 구현</text>
+        <text x="700" y="92" class="small-text">• DTO를 활용한 REST API 개발</text>
+        <text x="700" y="109" class="small-text">• Kafka 이벤트 프로듀서/컨슈머</text>
+        <text x="700" y="126" class="small-text">• SAGA 패턴 구현</text>
+        <text x="700" y="143" class="small-text">• 통합 테스트</text>
+    </g>
+
+    <!-- Footer -->
+    <text x="700" y="890" class="small-text" text-anchor="middle" fill="#7f8c8d">
+        MSA-SCM 프로젝트 | 이벤트 기반 마이크로서비스 아키텍처 | 2025-01-27
+    </text>
+</svg>

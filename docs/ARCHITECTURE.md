@@ -90,13 +90,13 @@ MSA-SCM은 물류 공급망 관리를 위한 마이크로서비스 아키텍처 
 
 **라우팅 규칙**:
 ```
-/api/common-service/**          → common-service (8090)
-/api/order-service/**           → order-service (8081)
-/api/inventory-service/**       → inventory-service (8082)
-/api/warehouse-service/**       → warehouse-service (8084)
-/api/delivery-service/**        → delivery-service (8087)
-/api/notification-service/**    → notification-service (8091)
-/api/analytics-service/**       → analytics-service (8092)
+/common-service/api/v1/**          → common-service (8090)
+/order-service/api/v1/**           → order-service (8081)
+/inventory-service/api/v1/**       → inventory-service (8082)
+/warehouse-service/api/v1/**       → warehouse-service (8084)
+/delivery-service/api/v1/**        → delivery-service (8087)
+/notification-service/api/v1/**    → notification-service (8091)
+/analytics-service/api/v1/**       → analytics-service (8092)
 ```
 
 #### 3. Config Server (8888)

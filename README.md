@@ -4,7 +4,9 @@
 
 ## 🏗️ 아키텍처 개요
 
-이 프로젝트는 **옵션 A (실용적 접근)** 구조를 채택하여 OMS, WMS, TMS를 통합한 종합 물류 관리 시스템입니다. 6개 비즈니스 서비스로 통합 구성되어 관리 복잡도를 낮추고 실무 환경에 적합한 구조를 유지합니다.
+이 프로젝트는 **Event-Driven** 아키텍처를 채택하여 OMS, WMS, TMS를 통합한 종합 물류 관리 시스템입니다. 6개 비즈니스 서비스로 분할 구성되어 시스템 간 결합도를 낮추고, 대규모 트래픽 상황에서도 유연한 확장과 안정적인 동시성 처리가 가능한 구조를 지향합니다.
+
+![Architecture](docs/images/architecture.svg)
 
 상세한 아키텍처는 [Architecture Documentation](docs/ARCHITECTURE.md)을 참고하세요.
 
