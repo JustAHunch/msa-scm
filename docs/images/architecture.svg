@@ -4,7 +4,7 @@
             .title { font: bold 24px sans-serif; fill: #2c3e50; }
             .subtitle { font: bold 16px sans-serif; fill: #34495e; }
             .text { font: 13px sans-serif; fill: #2c3e50; }
-            .small-text { font: 11px sans-serif; fill: #7f8c8d; }
+            .small-text { font: 11px sans-serif; fill: #2c3e50; }
 
             .infra-box { fill: #f39c12; stroke: #e67e22; stroke-width: 2; }
             .oms-box { fill: #3498db; stroke: #2980b9; stroke-width: 2; }
@@ -13,7 +13,7 @@
             .common-box { fill: #9b59b6; stroke: #8e44ad; stroke-width: 2; }
             .db-box { fill: #1abc9c; stroke: #16a085; stroke-width: 2; }
             .kafka-box { fill: #f1c40f; stroke: #f39c12; stroke-width: 2; }
-            .monitor-box { fill: #95a5a6; stroke: #7f8c8d; stroke-width: 2; }
+            .monitor-box { fill: #95a5a6; stroke: #2c3e50; stroke-width: 2; }
 
             .arrow { stroke: #34495e; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
             .event-arrow { stroke: #f39c12; stroke-width: 2; stroke-dasharray: 5,5; fill: none; marker-end: url(#arrowhead-event); }
