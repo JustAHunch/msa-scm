@@ -1,0 +1,21 @@
+rootProject.name = 'msa-scm'
+
+// Infrastructure Services
+include 'infrastructure:eureka-server'
+include 'infrastructure:api-gateway'
+include 'infrastructure:config-server'
+
+// OMS (Order Management System)
+include 'oms:order-service'         // 주문 + 고객 통합
+include 'oms:inventory-service'     // 재고
+
+// WMS (Warehouse Management System)
+include 'wms:warehouse-service'     // 창고 전체 (입고/피킹/적치 통합)
+
+// TMS (Transportation Management System)
+include 'tms:delivery-service'      // 배송 전체 (차량/기사/배송 통합)
+
+// Common Services
+include 'common:common-service'        // 공통 (User, Code 등)
+include 'common:notification-service'  // 알림
+include 'common:analytics-service'     // 분석
