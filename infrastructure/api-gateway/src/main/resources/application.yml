@@ -1,0 +1,93 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # Eureka를 통한 서비스 디스커버리 활성화
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      # 라우트 설정
+      routes:
+        # Common Services Routes
+        - id: common-service
+          uri: lb://common-service
+          predicates:
+            - Path=/common-service/**
+          filters:
+            - StripPrefix=1  # /common-service
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/notification-service/**
+          filters:
+            - StripPrefix=1  # /notification-service
+
+        - id: analytics-service
+          uri: lb://analytics-service
+          predicates:
+            - Path=/analytics-service/**
+          filters:
+            - StripPrefix=1  # /analytics-service
+
+        # OMS Routes
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/order-service/**
+          filters:
+            - StripPrefix=1  # /order-service
+            
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/inventory-service/**
+          filters:
+            - StripPrefix=1  # /inventory-service
+        
+        # WMS Routes
+        - id: warehouse-service
+          uri: lb://warehouse-service
+          predicates:
+            - Path=/warehouse-service/**
+          filters:
+            - StripPrefix=1  # /warehouse-service
+        
+        # TMS Routes
+        - id: delivery-service
+          uri: lb://delivery-service
+          predicates:
+            - Path=/delivery-service/**
+          filters:
+            - StripPrefix=1  # /delivery-service
+
+# Eureka Client 설정
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Eureka Server 주소
+    register-with-eureka: true                    # Eureka에 서비스 등록
+    fetch-registry: true                          # Eureka로부터 서비스 목록 가져오기
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: true                       # IP 주소로 등록
+
+# Actuator 설정
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.client: DEBUG

@@ -1,0 +1,35 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server  # 서비스 이름 (Eureka 등록명)
+  cloud:
+    config:
+      server:
+        # 로컬 파일 시스템 기반 설정 (추후 Git으로 변경 가능)
+        native:
+          search-locations: classpath:/config
+  profiles:
+    active: native
+
+# Eureka Client 설정
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Eureka Server 주소
+    register-with-eureka: true                    # Eureka에 서비스 등록
+    fetch-registry: true                          # Eureka로부터 서비스 목록 가져오기
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: true                       # IP 주소로 등록
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
