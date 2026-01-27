@@ -1,0 +1,54 @@
+# 서버 포트 설정
+server:
+  port: 8091
+
+spring:
+  application:
+    name: notification-service  # 서비스 이름 (Eureka 등록명)
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:your-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# Eureka Client 설정
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Eureka Server 주소
+    register-with-eureka: true                    # Eureka에 서비스 등록
+    fetch-registry: true                          # Eureka로부터 서비스 목록 가져오기
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: true                       # IP 주소로 등록
+
+# Actuator 설정 (헬스 체크, 메트릭)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# 로깅 설정
+logging:
+  level:
+    com.scm.notification: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
