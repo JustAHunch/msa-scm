@@ -80,7 +80,8 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 - [x] 의존성 설정
 - [x] Application 클래스 작성
 - [x] 라우팅 규칙 설정 (OMS, WMS, TMS, Common)
-- [ ] 인증/인가 설정
+- [x] JWT 인증/인가 설정 (JwtTokenProvider, JwtAuthenticationFilter)
+- [x] 인증 제외 경로 설정 (Swagger, Actuator, Auth API)
 - [ ] Rate Limiting 설정
 - [ ] Circuit Breaker 설정
 - [ ] 테스트 코드 작성
@@ -105,6 +106,8 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 - [x] Repository 구현
 - [x] Service 레이어 구현
 - [x] REST API 구현 (OrderResource, CustomerResource)
+- [x] Swagger/OpenAPI 문서화 (@Schema 어노테이션 추가)
+- [x] Postman Collection 및 Environment 생성
 - [ ] DTO 정의
 - [ ] 비즈니스 로직 확장 (주문 상태 관리, CS 처리)
 - [ ] 테스트 코드 작성
@@ -264,6 +267,8 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 - [x] CODING_CONVENTION.md: 코딩 규칙
 - [x] COMMIT_CONVENTION.md: 커밋 메시지 규칙
 - [x] PROJECT_PROGRESS.md: 프로젝트 진행 상황
+- [x] API_GATEWAY_AUTH.md: API Gateway 인증/인가 가이드
+- [x] postman/README.md: Postman 사용 가이드
 
 ### 작성 예정 문서
 - [ ] API_DOCUMENTATION.md: API 명세서
@@ -469,6 +474,8 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
   - ReturnOrder는 원본 InboundOrder와 DeliveryOrder 모두를 참조 가능하도록 설계
   - 비즈니스 메서드로 상태 전이를 명시적으로 제어하여 불법 상태 방지
 - **다음 목표**: Repository 및 Service 레이어 구현, 정산 시스템 설계
+
+### 2025-01-28 (6차: Kafka UI, Swagger, Postman, API Gateway 인증)
 - **완료**:
   - Docker Compose 이미지 버전 명시 (:latest → 특정 버전)
     - Kafka UI: v0.7.2
@@ -478,12 +485,26 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
   - Kafka UI 서비스 추가 (Port: 8989)
   - Kafka 클러스터 연결 설정 (scm-kafka-cluster)
   - Zookeeper 연동 설정
+  - Order Service에 Swagger/OpenAPI 문서화 추가 (SpringDoc 3.0)
+  - Order Entity에 @Schema 어노테이션 추가
+  - Postman Collection 생성 (Order Service API 테스트)
+  - Postman Environment 파일 생성 (Local, Dev-Gateway)
+  - Postman 사용 가이드 작성 (postman/README.md)
+  - API Gateway JWT 인증/인가 구현
+    - JwtTokenProvider 구현 (토큰 검증, 사용자 정보 추출)
+    - JwtAuthenticationFilter 구현 (Gateway Filter)
+    - 인증 제외 경로 설정 (Swagger, Actuator, Auth API)
+  - API Gateway 인증/인가 가이드 작성 (docs/API_GATEWAY_AUTH.md)
 - **배운 점**:
   - 프로덕션 환경에서는 :latest 태그 사용을 지양하고 특정 버전 명시 필요
   - Kafka UI를 통해 토픽, 메시지, 컨슈머 그룹을 웹 UI로 모니터링 가능
   - 이벤트 기반 아키텍처 디버깅을 위한 필수 도구
-  - provectuslabs/kafka-ui 이미지 활용
-- **다음 목표**: Repository 및 Service 레이어 구현 시작
+  - SpringDoc OpenAPI는 Spring Boot 3.x와 호환되는 최신 Swagger 라이브러리
+  - Postman Collection Runner와 Newman CLI를 활용한 자동화 테스트 가능
+  - Spring Cloud Gateway의 Reactive 기반 필터 구현 방식
+  - JWT Secret Key는 Common Service와 API Gateway가 동일해야 함
+  - 인증 제외 경로는 isExcludedPath() 메서드로 중앙 관리
+- **다음 목표**: Common Service에 JWT 발급 API 구현, Repository 및 Service 레이어 구현
 
 ## Entity 설계 세부 사항
 
@@ -537,6 +558,6 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 
 ---
 
-**마지막 업데이트**: 2025-01-28 (ReturnOrder Entity 추가 및 정산 시스템 계획 수립)
+**마지막 업데이트**: 2025-01-28 (Swagger, Postman, API Gateway 인증/인가 구현)
 **업데이트 담당**: SCM Team
 **총 Entity/Document 수**: 25개 (Order: 4, Inventory: 2, Warehouse: 9, Delivery: 5, Notification: 2, Analytics: 3, Common: 2)

@@ -31,6 +31,11 @@ dependencies {
     // Spring Security (User 인증/인가용)
     implementation 'org.springframework.boot:spring-boot-starter-security'
     
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    
     // Spring Cloud
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     

@@ -11,6 +11,9 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+      # 글로벌 필터 설정
+      default-filters:
+        - JwtAuthenticationFilter  # JWT 인증 필터 적용
       # 라우트 설정
       routes:
         # Common Services Routes
@@ -66,6 +69,11 @@ spring:
           filters:
             - StripPrefix=1  # /delivery-service
 
+# JWT 설정 (Common Service와 동일한 Secret Key 사용)
+jwt:
+  secret: ${JWT_SECRET:scm-jwt-secret-key-minimum-256-bits-required-for-hs256-algorithm-this-is-example-key}
+  # 주의: 운영 환경에서는 반드시 환경 변수로 JWT_SECRET을 설정하세요!
+
 # Eureka Client 설정
 eureka:
   client:
@@ -91,3 +99,4 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     reactor.netty.http.client: DEBUG
+    com.logistics.scm.gateway: DEBUG

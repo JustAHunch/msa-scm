@@ -2,9 +2,15 @@ package com.scm.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -16,16 +22,23 @@ import org.springframework.security.web.SecurityFilterChain;
  * 
  * 현재 구현:
  * - PasswordEncoder: BCrypt 사용 (비밀번호 암호화)
- * - 모든 엔드포인트 허용 (개발 단계)
+ * - AuthenticationManager: 로그인 인증 처리
+ * - AuthenticationProvider: UserDetailsService와 연동
+ * - JWT 기반 인증: Stateless 세션 관리
  * 
  * 향후 개선:
  * - JWT 인증 필터 추가
- * - 로그인/회원가입 엔드포인트만 허용
- * - 나머지 엔드포인트는 JWT 검증 필요
+ * - 역할 기반 접근 제어 (RBAC)
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final UserDetailsService userDetailsService;
+
+    public SecurityConfig(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
 
     /**
      * PasswordEncoder Bean 등록
@@ -39,10 +52,42 @@ public class SecurityConfig {
     }
 
     /**
+     * AuthenticationManager Bean 등록
+     * 
+     * 로그인 시 사용자 인증을 처리합니다.
+     * 
+     * @param config AuthenticationConfiguration
+     * @return AuthenticationManager
+     * @throws Exception
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    /**
+     * AuthenticationProvider Bean 등록
+     * 
+     * UserDetailsService와 PasswordEncoder를 사용하여 인증을 처리합니다.
+     * 
+     * @return DaoAuthenticationProvider
+     */
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    /**
      * Security Filter Chain 설정
      * 
-     * 현재는 개발 단계이므로 모든 요청 허용
-     * 향후 JWT 인증 필터 추가 예정
+     * JWT 기반 인증을 위한 설정:
+     * - CSRF 비활성화 (REST API는 CSRF 불필요)
+     * - Stateless 세션 관리 (JWT 사용)
+     * - 인증 API는 모두 허용
+     * - 나머지는 인증 필요 (향후)
      * 
      * @param http HttpSecurity
      * @return SecurityFilterChain
@@ -54,8 +99,18 @@ public class SecurityConfig {
                 // CSRF 비활성화 (REST API는 CSRF 불필요)
                 .csrf(AbstractHttpConfigurer::disable)
                 
-                // 모든 요청 허용 (개발 단계)
+                // 세션 관리: Stateless (JWT 사용)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                
+                // 요청별 인가 설정
                 .authorizeHttpRequests(auth -> auth
+                        // 인증 API는 모두 허용
+                        .requestMatchers("/api/auth/**").permitAll()
+                        // Actuator 헬스 체크 허용
+                        .requestMatchers("/actuator/health").permitAll()
+                        // 개발 단계: 모든 요청 허용 (향후 변경 예정)
                         .anyRequest().permitAll()
                 );
 

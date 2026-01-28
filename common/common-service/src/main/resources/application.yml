@@ -31,6 +31,14 @@ spring:
       name: admin
       password: admin
 
+# JWT 설정
+jwt:
+  # Base64로 인코딩된 Secret Key (256비트 이상)
+  # 운영 환경에서는 반드시 환경 변수로 관리
+  secret: U0NNLU1TQS1KV1QtU0VDUkVULUtFWS0yMDI1LVBMRUFTR (CHANGE-VEhJUy1JTi1QUk9EVUNUSU9OLUVOVEVST05NRU5ULVVTRS1TVFJPTkctU0VDUkVU
+  expiration: 86400000  # 24시간 (밀리초)
+  refresh-expiration: 604800000  # 7일 (밀리초)
+
 # Eureka Client 설정
 eureka:
   client:
