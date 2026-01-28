@@ -26,7 +26,7 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 | Docker 통합 환경 구축 | 📅 예정 | - |
 | 모니터링 시스템 구축 | 📅 예정 | - |
 
-## 시스템 구성 (옵션 A: 실용적 접근)
+## 시스템 구성
 
 ### 총 6개 비즈니스 서비스 + 3개 인프라 서비스
 
@@ -137,11 +137,12 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 - [x] Application 클래스 작성
 - [x] application.yml 설정
 - [x] BaseEntity 및 AuditorAware 구현
-- [x] Entity 정의 완료 (8개)
+- [x] Entity 정의 완료 (9개)
   - Warehouse, Zone, Location
   - Worker
   - InboundOrder, InboundItem
   - PickingList, PickingItem
+  - ReturnOrder (반송 관리)
 - [ ] Repository 구현
 - [ ] Service 레이어 구현
 - [ ] REST API 구현
@@ -284,6 +285,12 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 2. [ ] Kafka 이벤트 발행/구독 구현
 3. [ ] API Gateway 인증/인가 설정
 4. [ ] 재고 동시성 제어 구현
+5. [ ] 정산 시스템 설계 및 구현
+   - Settlement Service 신규 생성 또는 기존 서비스 통합 결정
+   - DeliveryCost Entity: 배송비 계산 및 정산
+   - ReturnCost Entity: 반송 비용 정산
+   - 귀책사유별 비용 부담 로직 구현
+   - 세금계산서 발행 기능
 
 ### 우선순위 낮음
 1. [ ] 통합 테스트 작성
@@ -293,7 +300,7 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 
 ## 아키텍처 결정 사항 (ADR)
 
-### ADR-001: 6개 서비스 구조 채택 (옵션 A)
+### ADR-001: 6개 서비스 구조 채택
 - **결정일**: 2025-01-27
 - **배경**: 초기 계획은 12개의 세분화된 서비스였으나, 학습 프로젝트의 현실적 관리 가능성 고려
 - **결정**: 도메인별 통합 서비스 구조 채택
@@ -448,7 +455,20 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
   - Common Service가 다른 서비스의 인증/인가 기반이 됨
 - **다음 목표**: JWT 토큰 발급 및 검증 기능 구현, API Gateway JWT 필터 추가
 
-### 2025-01-27 (4차: Docker Compose 버전 명시화 및 Kafka UI 추가)
+### 2025-01-28 (5차: ReturnOrder Entity 추가 및 정산 시스템 계획 수립)
+- **완료**:
+  - ReturnOrder Entity 추가 (Warehouse Service)
+  - 반송 사유 6가지 정의 (QUALITY_FAIL, QUANTITY_MISMATCH, WRONG_PRODUCT, DAMAGE, CUSTOMER_CANCEL, DELIVERY_FAIL)
+  - 귀책 주체 4가지 정의 (SUPPLIER, CUSTOMER, CARRIER, SYSTEM)
+  - 반송 상태 관리 (REQUESTED, APPROVED, IN_TRANSIT, COMPLETED, CANCELLED)
+  - 반송 프로세스 비즈니스 메서드 구현 (approve, startReturn, complete, cancel)
+  - 정산 시스템 설계 및 우선순위 계획 수립 (PROJECT_PROGRESS.md 업데이트)
+- **배운 점**:
+  - 반송 처리는 비용 정산과 밀접하게 연관되어 있으며 귀책사유가 핵심
+  - LiabilityParty Enum을 통해 비용 부담 주체를 명확히 관리 가능
+  - ReturnOrder는 원본 InboundOrder와 DeliveryOrder 모두를 참조 가능하도록 설계
+  - 비즈니스 메서드로 상태 전이를 명시적으로 제어하여 불법 상태 방지
+- **다음 목표**: Repository 및 Service 레이어 구현, 정산 시스템 설계
 - **완료**:
   - Docker Compose 이미지 버전 명시 (:latest → 특정 버전)
     - Kafka UI: v0.7.2
@@ -477,7 +497,7 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 1. **Inventory**: 재고 정보 (창고ID, 상품코드, 가용수량, 할당수량, 안전재고)
 2. **StockMovement**: 재고 이동 이력 (입고/출고/조정/예약/해제)
 
-### Warehouse Service (8개 Entity) ✅
+### Warehouse Service (9개 Entity) ✅
 1. **Warehouse**: 창고 정보 (창고코드, 이름, 주소, 유형, 용량)
 2. **Zone**: 창고 구역 (구역코드, 유형: 입고/보관/피킹/포장/출고)
 3. **Location**: 로케이션 (위치코드, 유형: 선반/팔레트/바닥)
@@ -486,6 +506,7 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 6. **PickingList**: 피킹 리스트 (주문ID, 작업자, 우선순위)
 7. **PickingItem**: 피킹 항목 (상품코드, 위치, 수량)
 8. **Worker**: 작업자 (작업자코드, 이름, 역할: 피커/패커/QC/관리자)
+9. **ReturnOrder**: 반송 주문 (반송번호, 반송사유, 귀책주체, 상태)
 
 ### Delivery Service (5개 Entity) ✅
 1. **DeliveryOrder**: 배송 주문 (송장번호, 주문ID, 차량/기사, 배송지, 상태)
@@ -516,6 +537,6 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 
 ---
 
-**마지막 업데이트**: 2025-01-27 (Docker 이미지 버전 명시화 및 Kafka UI 추가)
+**마지막 업데이트**: 2025-01-28 (ReturnOrder Entity 추가 및 정산 시스템 계획 수립)
 **업데이트 담당**: SCM Team
-**총 Entity/Document 수**: 24개 (Order: 4, Inventory: 2, Warehouse: 8, Delivery: 5, Notification: 2, Analytics: 3, Common: 2)
+**총 Entity/Document 수**: 25개 (Order: 4, Inventory: 2, Warehouse: 9, Delivery: 5, Notification: 2, Analytics: 3, Common: 2)

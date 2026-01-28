@@ -1,0 +1,106 @@
+%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'16px'}}}%%
+flowchart TB
+    %% 스타일 정의
+    classDef userClass fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    classDef authClass fill:#e1f5fe,stroke:#03a9f4,stroke-width:2px
+    classDef hubClass fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    classDef inventoryClass fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    classDef orderClass fill:#fce4ec,stroke:#e91e63,stroke-width:2px
+    classDef deliveryClass fill:#ffebee,stroke:#f44336,stroke-width:2px
+    classDef notificationClass fill:#e0f7fa,stroke:#00bcd4,stroke-width:2px
+    classDef settlementClass fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    classDef errorClass fill:#ffcdd2,stroke:#d32f2f,stroke-width:2px
+
+    %% 사용자
+    User([업체/관리자]):::userClass
+
+    %% 인증 프로세스
+    User --> Register[회원가입<br/>업체정보 등록]:::authClass
+    User --> Login[로그인]:::authClass
+    
+    Register --> AuthCheck{인증 확인}:::authClass
+    Login --> AuthCheck
+    
+    %% 상품 관리
+    AuthCheck -->|인증 성공| ProductReg[상품 등록]:::inventoryClass
+    AuthCheck -->|인증 실패| AuthFail[인증 실패<br/>알림 전송]:::errorClass
+    
+    ProductReg --> HubInbound[허브 입고 신청]:::hubClass
+    
+    %% 입고 처리
+    HubInbound --> InboundInspection[입고 검수]:::hubClass
+    InboundInspection --> QualityCheck{품질 확인}:::hubClass
+    
+    QualityCheck -->|합격| InventoryReg[재고 등록<br/>재고 증가 이벤트]:::inventoryClass
+    QualityCheck -->|불합격| InboundReject[입고 거부<br/>반송 처리]:::errorClass
+    
+    InboundReject --> ReturnCostCalc[반송 물류비 정산<br/>공급자 부담]:::settlementClass
+    ReturnCostCalc --> RejectNotification[거부 알림 전송<br/>비용 청구 포함]:::notificationClass
+    
+    %% 재고 관리
+    InventoryReg --> InventoryManage[재고 관리<br/>허브별 재고 현황]:::inventoryClass
+    
+    %% 배송 주문
+    InventoryManage --> DeliveryOrder[배송 주문 생성]:::orderClass
+    
+    DeliveryOrder --> StockCheck{재고 확인}:::inventoryClass
+    StockCheck -->|재고 부족| StockShortage[재고 부족 알림<br/>주문 보류]:::errorClass
+    StockCheck -->|재고 있음| StockReserve[재고 예약<br/>재고 차감 이벤트]:::inventoryClass
+    
+    %% 배송 처리
+    StockReserve --> RouteCalc[배송 경로 계산<br/>출발지/목적지 허브]:::deliveryClass
+    
+    RouteCalc --> HubTransfer{허브 간<br/>이동 필요?}:::deliveryClass
+    
+    HubTransfer -->|필요| OutboundProcess[출고 처리<br/>출발 허브 재고 차감]:::hubClass
+    HubTransfer -->|불필요| DirectOutbound[직접 출고]:::hubClass
+    
+    OutboundProcess --> InterHubMove[허브 간 이동<br/>차량 배차]:::deliveryClass
+    InterHubMove --> HubArrival[목적지 허브 도착<br/>입고 처리]:::hubClass
+    
+    HubArrival --> DestinationStock[목적지 허브<br/>재고 증가 이벤트]:::inventoryClass
+    
+    DirectOutbound --> FinalDelivery[최종 배송<br/>배송기사 배정]:::deliveryClass
+    DestinationStock --> FinalDelivery
+    
+    %% 배송 추적
+    FinalDelivery --> DeliveryTracking[배송 추적<br/>실시간 위치 공유]:::deliveryClass
+    
+    DeliveryTracking --> DeliveryComplete{배송 완료}:::deliveryClass
+    
+    DeliveryComplete -->|성공| CompleteNotification[배송 완료 알림<br/>최종 재고 확정]:::notificationClass
+    DeliveryComplete -->|실패| DeliveryFail[배송 실패<br/>재고 원복 이벤트]:::errorClass
+    
+    DeliveryFail --> FailureCostCalc[실패 원인 확인<br/>비용 부담자 결정]:::settlementClass
+    FailureCostCalc --> RedeliveryProcess[재배송 처리<br/>또는 반품]:::deliveryClass
+    
+    %% 정산
+    CompleteNotification --> Settlement[배송비 정산<br/>거리/중량 기반]:::settlementClass
+    Settlement --> InvoiceGen[세금계산서 발행]:::settlementClass
+    InvoiceGen --> SettlementComplete[정산 완료<br/>알림 전송]:::settlementClass
+    
+    SettlementComplete --> End([종료]):::userClass
+    RedeliveryProcess --> End
+    StockShortage --> End
+    AuthFail --> End
+    RejectNotification --> End
+
+    %% 주석
+    subgraph Legend[범례]
+        direction LR
+        L1[인증/계정]:::authClass
+        L2[허브 관리]:::hubClass
+        L3[재고 관리]:::inventoryClass
+        L4[주문 처리]:::orderClass
+        L5[배송 처리]:::deliveryClass
+        L6[알림]:::notificationClass
+        L7[정산]:::settlementClass
+        L8[오류 처리]:::errorClass
+    end
+    
+    subgraph CostRules[반송 비용 부담 규칙]
+        direction TB
+        CR1[공급자 귀책: 품질불량/오배송<br/>→ 공급자가 왕복 운송비 부담]
+        CR2[구매자 귀책: 단순변심/주문착오<br/>→ 구매자가 왕복 운송비 부담]
+        CR3[배송 실패: 원인에 따라 결정<br/>→ 수령거부=구매자, 배송과실=물류사]
+    end

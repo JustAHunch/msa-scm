@@ -84,7 +84,7 @@
         <g id="wms">
             <rect x="450" y="210" width="180" height="140" class="wms-box" rx="5"/>
             <text x="540" y="230" class="text" text-anchor="middle" fill="white">창고 서비스</text>
-            <text x="540" y="248" class="small-text" text-anchor="middle" fill="white">✓ 8개 엔티티</text>
+            <text x="540" y="248" class="small-text" text-anchor="middle" fill="white">✓ 9개 엔티티</text>
             <text x="540" y="263" class="small-text" text-anchor="middle" fill="white">Warehouse, Zone</text>
             <text x="540" y="278" class="small-text" text-anchor="middle" fill="white">InboundOrder, Picking...</text>
             <text x="540" y="298" class="small-text" text-anchor="middle" fill="white" font-weight="bold">포트: 8084</text>
