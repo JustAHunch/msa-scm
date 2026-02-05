@@ -104,6 +104,11 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 
     /**
      * 인증 제외 경로 확인
+     * 
+     * JWT 검증을 하지 않을 경로들을 정의합니다.
+     * - /api/auth/login: 로그인 (토큰 발급)
+     * - /actuator/health: 헬스 체크
+     * - Swagger 관련 경로들
      */
     private boolean isExcludedPath(String path) {
         return path.contains("/actuator/health") ||
@@ -111,7 +116,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                path.contains("/v3/api-docs") ||
                path.contains("/api-docs") ||
                path.startsWith("/eureka") ||
-               path.contains("/api/auth/");
+               path.equals("/api/auth/login"); // login만 제외
     }
 
     /**

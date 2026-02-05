@@ -10,8 +10,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * 인증 서비스
@@ -85,9 +90,27 @@ public class AuthService {
         String username = jwtProvider.getUsernameFromToken(refreshToken);
         String authorities = jwtProvider.getAuthoritiesFromToken(refreshToken);
 
-        // 3. 새로운 Authentication 객체 생성
+        // 3. 권한 정보를 포함한 Authentication 객체 생성
+        // JWT 생성 시 authorities가 필요하므로, 토큰에서 추출한 권한 정보를 사용
+        Collection<GrantedAuthority> grantedAuthorities = 
+            Arrays.stream(authorities.split(","))
+                .map(String::trim)
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+        
+        // UserDetails 객체 생성 (JWT 생성을 위해 필요)
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username(username)
+                .password("") // 비밀번호는 불필요 (이미 인증됨)
+                .authorities(grantedAuthorities)
+                .build();
+        
         UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(username, null, null);
+                new UsernamePasswordAuthenticationToken(
+                    userDetails,  // Principal은 UserDetails 객체여야 함
+                    null, 
+                    grantedAuthorities
+                );
 
         // 4. 새로운 Access Token 생성
         String newAccessToken = jwtProvider.generateAccessToken(authentication);

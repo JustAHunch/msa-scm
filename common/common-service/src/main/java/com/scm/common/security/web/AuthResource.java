@@ -108,6 +108,11 @@ public class AuthResource {
         log.info("Token refresh requested");
         
         try {
+            if (tokenBlacklistService.isBlacklisted(refreshToken)) {
+                log.warn("Blocked blacklisted token in validate endpoint");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
             JwtResponseDTO response = authService.refreshAccessToken(refreshToken);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -145,26 +150,21 @@ public class AuthResource {
         log.debug("Token validation requested");
 
         try {
-            // 토큰 유효성 검증
-            boolean isValid = jwtProvider.validateToken(token);
-
-            if (isValid) {
-                // 토큰에서 사용자 정보 추출
-                String username = jwtProvider.getUsernameFromToken(token);
-                String authorities = jwtProvider.getAuthoritiesFromToken(token);
-                Date expiration = jwtProvider.getExpirationFromToken(token);
-                boolean isExpired = jwtProvider.isTokenExpired(token);
-
+            // 1. 블랙리스트 확인 (로그아웃된 토큰인지 체크)
+            if (tokenBlacklistService.isBlacklisted(token)) {
+                log.warn("Blocked blacklisted token in validate endpoint");
                 TokenValidationResponseDTO response = TokenValidationResponseDTO.builder()
-                        .valid(true)
-                        .username(username)
-                        .authorities(authorities)
-                        .expiration(expiration)
-                        .expired(isExpired)
+                        .valid(false)
+                        .errorMessage("Token has been revoked")
                         .build();
 
-                return ResponseEntity.ok(response);
-            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+
+            // 2. 토큰 유효성 검증
+            boolean isValid = jwtProvider.validateToken(token);
+
+            if (!isValid) {
                 // 유효하지 않은 토큰
                 TokenValidationResponseDTO response = TokenValidationResponseDTO.builder()
                         .valid(false)
@@ -173,6 +173,23 @@ public class AuthResource {
 
                 return ResponseEntity.ok(response);
             }
+
+            // 3. 토큰에서 사용자 정보 추출
+            String username = jwtProvider.getUsernameFromToken(token);
+            String authorities = jwtProvider.getAuthoritiesFromToken(token);
+            Date expiration = jwtProvider.getExpirationFromToken(token);
+            boolean isExpired = jwtProvider.isTokenExpired(token);
+
+            TokenValidationResponseDTO response = TokenValidationResponseDTO.builder()
+                    .valid(true)
+                    .username(username)
+                    .authorities(authorities)
+                    .expiration(expiration)
+                    .expired(isExpired)
+                    .build();
+
+            return ResponseEntity.ok(response);
+            
         } catch (Exception e) {
             log.error("Token validation error", e);
             
@@ -190,19 +207,19 @@ public class AuthResource {
      * 
      * POST /api/auth/logout
      * 
-     * JWT 토큰을 Redis 블랙리스트에 추가하여 무효화합니다.
+     * Access Token과 Refresh Token을 모두 Redis 블랙리스트에 추가하여 무효화합니다.
      * 클라이언트는 토큰을 삭제해야 합니다.
-     * 
+     *
      * 동작 방식:
-     * 1. 토큰을 Redis 블랙리스트에 추가 (TTL: 토큰 만료 시간까지)
+     * 1. Access Token과 Refresh Token을 Redis 블랙리스트에 추가 (TTL: 토큰 만료 시간까지)
      * 2. API Gateway에서 블랙리스트 확인 후 차단
      * 3. 클라이언트는 로컬 스토리지에서 토큰 삭제
-     * 
+     *
      * @return 로그아웃 성공 메시지
      */
     @Operation(
             summary = "로그아웃",
-            description = "로그아웃 처리를 수행합니다. JWT 토큰을 Redis 블랙리스트에 추가하여 무효화합니다."
+            description = "로그아웃 처리를 수행합니다. Access Token과 Refresh Token을 모두 Redis 블랙리스트에 추가하여 무효화합니다."
     )
     @ApiResponses({
             @ApiResponse(
@@ -218,31 +235,46 @@ public class AuthResource {
     @PostMapping("/logout")
     public ResponseEntity<String> logout(
             @Parameter(description = "Authorization 헤더 (Bearer {token})", required = true)
-            @RequestHeader("Authorization") String authHeader) {
-        
+            @RequestHeader("Authorization") String authHeader,
+            @Parameter(description = "Refresh Token (선택사항)")
+            @RequestHeader(value = "Refresh-Token", required = false) String refreshToken) {
+
         if (!authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("유효하지 않은 Authorization 헤더입니다.");
         }
-        
-        // Bearer 토큰에서 실제 토큰 추출
-        String token = authHeader.substring(7);
-        
+
+        // Bearer 토큰에서 실제 토큰 추출 (Access Token)
+        String accessToken = authHeader.substring(7);
+
         try {
-            // 토큰 유효성 검증
-            if (!jwtProvider.validateToken(token)) {
+            // Access Token 유효성 검증
+            if (!jwtProvider.validateToken(accessToken)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("유효하지 않은 토큰입니다.");
             }
-            
-            String username = jwtProvider.getUsernameFromToken(token);
-            
-            // Redis 블랙리스트에 추가
-            boolean added = tokenBlacklistService.addToBlacklist(token);
-            
-            if (added) {
+
+            String username = jwtProvider.getUsernameFromToken(accessToken);
+
+            // 1. Access Token을 Redis 블랙리스트에 추가
+            boolean accessTokenAdded = tokenBlacklistService.addToBlacklist(accessToken);
+
+            // 2. Refresh Token도 블랙리스트에 추가 (있는 경우)
+            boolean refreshTokenAdded = true;
+            if (refreshToken != null && !refreshToken.isEmpty()) {
+                if (jwtProvider.validateToken(refreshToken)) {
+                    refreshTokenAdded = tokenBlacklistService.addToBlacklist(refreshToken);
+                    log.info("Refresh token added to blacklist for user: {}", username);
+                }
+            }
+
+            if (accessTokenAdded) {
                 log.info("User logged out successfully: {}", username);
-                return ResponseEntity.ok("로그아웃되었습니다.");
+                if (refreshTokenAdded) {
+                    return ResponseEntity.ok("로그아웃되었습니다.");
+                } else {
+                    return ResponseEntity.ok("로그아웃되었습니다.");
+                }
             } else {
                 log.warn("Failed to add token to blacklist for user: {}", username);
                 return ResponseEntity.ok("로그아웃되었습니다. (블랙리스트 등록 실패)");
