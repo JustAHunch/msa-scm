@@ -2,6 +2,7 @@ package com.scm.common.security.web;
 
 import com.scm.common.security.jwt.JwtProvider;
 import com.scm.common.security.service.AuthService;
+import com.scm.common.security.service.TokenBlacklistService;
 import com.scm.common.user.web.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,6 +40,7 @@ public class AuthResource {
 
     private final AuthService authService;
     private final JwtProvider jwtProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * 로그인 및 JWT 토큰 발급
@@ -188,23 +190,28 @@ public class AuthResource {
      * 
      * POST /api/auth/logout
      * 
-     * JWT는 Stateless이므로 실제로는 클라이언트에서 토큰을 삭제하는 것으로 처리됩니다.
-     * 서버에서는 로그 기록만 수행합니다.
+     * JWT 토큰을 Redis 블랙리스트에 추가하여 무효화합니다.
+     * 클라이언트는 토큰을 삭제해야 합니다.
      * 
-     * 향후 개선:
-     * - Redis를 사용한 토큰 블랙리스트 구현
-     * - 토큰 만료 시간까지 블랙리스트에 보관
+     * 동작 방식:
+     * 1. 토큰을 Redis 블랙리스트에 추가 (TTL: 토큰 만료 시간까지)
+     * 2. API Gateway에서 블랙리스트 확인 후 차단
+     * 3. 클라이언트는 로컬 스토리지에서 토큰 삭제
      * 
      * @return 로그아웃 성공 메시지
      */
     @Operation(
             summary = "로그아웃",
-            description = "로그아웃 처리를 수행합니다. JWT는 Stateless이므로 클라이언트에서 토큰을 삭제해야 합니다."
+            description = "로그아웃 처리를 수행합니다. JWT 토큰을 Redis 블랙리스트에 추가하여 무효화합니다."
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
                     description = "로그아웃 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "유효하지 않은 토큰"
             )
     })
     @SecurityRequirement(name = "bearerAuth")
@@ -212,19 +219,39 @@ public class AuthResource {
     public ResponseEntity<String> logout(
             @Parameter(description = "Authorization 헤더 (Bearer {token})", required = true)
             @RequestHeader("Authorization") String authHeader) {
+        
+        if (!authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("유효하지 않은 Authorization 헤더입니다.");
+        }
+        
         // Bearer 토큰에서 실제 토큰 추출
         String token = authHeader.substring(7);
         
         try {
+            // 토큰 유효성 검증
+            if (!jwtProvider.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("유효하지 않은 토큰입니다.");
+            }
+            
             String username = jwtProvider.getUsernameFromToken(token);
-            log.info("User logged out: {}", username);
             
-            // TODO: Redis 블랙리스트에 토큰 추가 (향후 구현)
+            // Redis 블랙리스트에 추가
+            boolean added = tokenBlacklistService.addToBlacklist(token);
             
-            return ResponseEntity.ok("로그아웃되었습니다.");
+            if (added) {
+                log.info("User logged out successfully: {}", username);
+                return ResponseEntity.ok("로그아웃되었습니다.");
+            } else {
+                log.warn("Failed to add token to blacklist for user: {}", username);
+                return ResponseEntity.ok("로그아웃되었습니다. (블랙리스트 등록 실패)");
+            }
+            
         } catch (Exception e) {
             log.error("Logout error", e);
-            return ResponseEntity.ok("로그아웃되었습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("로그아웃 처리 중 오류가 발생했습니다.");
         }
     }
 }

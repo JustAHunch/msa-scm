@@ -1,6 +1,7 @@
 package com.logistics.scm.gateway.filter;
 
 import com.logistics.scm.gateway.security.JwtTokenProvider;
+import com.logistics.scm.gateway.security.TokenBlacklistService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -24,8 +25,11 @@ import reactor.core.publisher.Mono;
  * - /v3/api-docs/** (OpenAPI Docs)
  * - /api/auth/** (인증 API)
  * 
+ * 블랙리스트 체크:
+ * - 로그아웃된 토큰은 Redis 블랙리스트에서 확인하여 차단
+ * 
  * @author c.h.jo
- * @since 2026-01-28
+ * @since 2025-01-28
  */
 @Component
 public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {
@@ -34,10 +38,13 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, 
+                                   TokenBlacklistService tokenBlacklistService) {
         super(Config.class);
         this.jwtTokenProvider = jwtTokenProvider;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -63,25 +70,35 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             // Bearer 접두사 제거
             String token = authHeader.substring(BEARER_PREFIX.length());
 
-            // 토큰 검증
+            // 1. 토큰 검증
             if (!jwtTokenProvider.validateToken(token)) {
                 log.warn("Invalid JWT token for path: {}", path);
                 return onError(exchange, "Invalid or expired JWT token", HttpStatus.UNAUTHORIZED);
             }
 
-            // 사용자 정보 추출 및 헤더에 추가
-            String username = jwtTokenProvider.getUsername(token);
-            String role = jwtTokenProvider.getRole(token);
+            // 2. 블랙리스트 확인 (Reactive)
+            return tokenBlacklistService.isBlacklisted(token)
+                    .flatMap(isBlacklisted -> {
+                        if (Boolean.TRUE.equals(isBlacklisted)) {
+                            log.warn("Blocked blacklisted token for path: {}", path);
+                            return onError(exchange, "Token has been revoked", HttpStatus.UNAUTHORIZED);
+                        }
 
-            log.debug("JWT validation successful - username: {}, role: {}, path: {}", username, role, path);
+                        // 3. 사용자 정보 추출 및 헤더에 추가
+                        String username = jwtTokenProvider.getUsername(token);
+                        String role = jwtTokenProvider.getRole(token);
 
-            // 사용자 정보를 헤더에 추가하여 downstream 서비스에 전달
-            ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                    .header("X-User-Name", username)
-                    .header("X-User-Role", role)
-                    .build();
+                        log.debug("JWT validation successful - username: {}, role: {}, path: {}", 
+                                 username, role, path);
 
-            return chain.filter(exchange.mutate().request(modifiedRequest).build());
+                        // 사용자 정보를 헤더에 추가하여 downstream 서비스에 전달
+                        ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
+                                .header("X-User-Name", username)
+                                .header("X-User-Role", role)
+                                .build();
+
+                        return chain.filter(exchange.mutate().request(modifiedRequest).build());
+                    });
         };
     }
 

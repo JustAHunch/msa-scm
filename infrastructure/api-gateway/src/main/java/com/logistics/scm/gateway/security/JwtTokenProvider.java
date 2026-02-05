@@ -90,4 +90,20 @@ public class JwtTokenProvider {
         
         return claims.get("role", String.class);
     }
+
+    /**
+     * JWT 토큰의 만료 시간을 추출합니다.
+     * 
+     * @param token JWT 토큰
+     * @return 만료 시간
+     */
+    public java.util.Date getExpiration(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        
+        return claims.getExpiration();
+    }
 }

@@ -29,7 +29,7 @@ import java.util.UUID;
  * - 비밀번호 변경 이력
  */
 @Entity
-@Table(name = "users", indexes = {
+@Table(name = "USER_TB", indexes = {
     @Index(name = "idx_user_username", columnList = "username"),
     @Index(name = "idx_user_email", columnList = "email")
 })

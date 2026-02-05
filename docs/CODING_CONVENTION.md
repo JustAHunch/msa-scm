@@ -150,7 +150,7 @@ public class OrderResponse {
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "orders")
+@Table(name = "ORDER_TB")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
