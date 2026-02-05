@@ -6,7 +6,7 @@ import lombok.Getter;
  * 시스템 통합 최상위 예외 클래스
  *
  * @author c.h.jo
- * @since 2025-02-05
+ * @since 2026-02-05
  */
 @Getter
 public class BaseException extends RuntimeException {

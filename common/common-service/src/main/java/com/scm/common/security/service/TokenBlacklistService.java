@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * - TTL: 토큰의 남은 유효 시간
  * 
  * @author c.h.jo
- * @since 2025-02-05
+ * @since 2026-02-05
  */
 @Slf4j
 @Service

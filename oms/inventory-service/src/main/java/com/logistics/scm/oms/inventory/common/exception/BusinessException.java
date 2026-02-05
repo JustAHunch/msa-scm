@@ -5,7 +5,7 @@ package com.logistics.scm.oms.inventory.common.exception;
  * 일반적인 비즈니스 규칙 위반 시 발생
  *
  * @author c.h.jo
- * @since 2025-02-05
+ * @since 2026-02-05
  */
 public class BusinessException extends BaseException {
 

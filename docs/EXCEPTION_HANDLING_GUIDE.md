@@ -72,7 +72,7 @@ import lombok.Getter;
  * 시스템 통합 최상위 예외 클래스
  *
  * @author c.h.jo
- * @since 2025-02-05
+ * @since 2026-02-05
  */
 @Getter
 public class BaseException extends RuntimeException {
@@ -207,7 +207,7 @@ import org.springframework.http.HttpStatus;
  * {서비스명} 전체 에러 코드 중앙 관리
  *
  * @author c.h.jo
- * @since 2025-02-05
+ * @since 2026-02-05
  */
 @Getter
 @RequiredArgsConstructor
@@ -249,7 +249,7 @@ import java.util.List;
  * 일관된 에러 응답 형식 제공
  *
  * @author c.h.jo
- * @since 2025-02-05
+ * @since 2026-02-05
  */
 @Getter
 @Builder
@@ -304,7 +304,7 @@ import java.util.stream.Collectors;
  * 모든 예외를 중앙에서 처리하여 일관된 에러 응답 제공
  *
  * @author c.h.jo
- * @since 2025-02-05
+ * @since 2026-02-05
  */
 @Slf4j
 @RestControllerAdvice
@@ -647,7 +647,7 @@ import lombok.Getter;
  * {발생 조건}
  *
  * @author c.h.jo
- * @since 2025-02-05
+ * @since 2026-02-05
  */
 @Getter
 public class {예외명}Exception extends {부모Exception} {
@@ -878,7 +878,7 @@ public class InventoryController {
   "code": "I002",
   "message": "재고가 부족합니다.",
   "status": 400,
-  "timestamp": "2025-02-05T14:30:00",
+  "timestamp": "2026-02-05T14:30:00",
   "path": "/api/inventory/reserve"
 }
 ```
@@ -889,7 +889,7 @@ public class InventoryController {
   "code": "I001",
   "message": "재고를 찾을 수 없습니다.",
   "status": 404,
-  "timestamp": "2025-02-05T14:30:00",
+  "timestamp": "2026-02-05T14:30:00",
   "path": "/api/inventory/reserve"
 }
 ```
@@ -900,7 +900,7 @@ public class InventoryController {
   "code": "C002",
   "message": "잘못된 입력값입니다.",
   "status": 400,
-  "timestamp": "2025-02-05T14:30:00",
+  "timestamp": "2026-02-05T14:30:00",
   "path": "/api/inventory/reserve",
   "errors": [
     {
@@ -955,6 +955,6 @@ public class InventoryController {
 
 ---
 
-**작성일**: 2025-02-05  
+**작성일**: 2026-02-05  
 **버전**: 1.0  
 **작성자**: System

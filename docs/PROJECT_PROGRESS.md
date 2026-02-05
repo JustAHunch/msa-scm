@@ -5,7 +5,7 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 ## 프로젝트 개요
 
 - **프로젝트명**: MSA-SCM (Supply Chain Management Platform)
-- **시작일**: 2025-01-27
+- **시작일**: 2026-01-27
 - **목표**: 물류 공급망 관리를 위한 마이크로서비스 플랫폼 구축
 - **현재 버전**: 0.0.1-SNAPSHOT
 - **아키텍처**: 옵션 A (실용적 접근 - 6개 비즈니스 서비스)
@@ -14,13 +14,13 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 
 | 단계 | 상태 | 완료일 |
 |-----|------|--------|
-| 프로젝트 초기 설정 | ✅ 완료 | 2025-01-27 |
-| Infrastructure 서비스 구축 | ✅ 완료 | 2025-01-27 |
-| OMS 기본 구조 구축 | ✅ 완료 | 2025-01-27 |
-| WMS 기본 구조 구축 | ✅ 완료 | 2025-01-27 |
-| TMS 기본 구조 구축 | ✅ 완료 | 2025-01-27 |
-| Common Services 구축 | ✅ 완료 | 2025-01-27 |
-| Entity 구현 | ✅ 완료 | 2025-01-27 |
+| 프로젝트 초기 설정 | ✅ 완료 | 2026-01-27 |
+| Infrastructure 서비스 구축 | ✅ 완료 | 2026-01-27 |
+| OMS 기본 구조 구축 | ✅ 완료 | 2026-01-27 |
+| WMS 기본 구조 구축 | ✅ 완료 | 2026-01-27 |
+| TMS 기본 구조 구축 | ✅ 완료 | 2026-01-27 |
+| Common Services 구축 | ✅ 완료 | 2026-01-27 |
+| Entity 구현 | ✅ 완료 | 2026-01-27 |
 | 비즈니스 로직 구현 | 📅 예정 | - |
 | 테스트 코드 작성 | 📅 예정 | - |
 | Docker 통합 환경 구축 | 📅 예정 | - |
@@ -502,7 +502,7 @@ inventory-service/
 ## 아키텍처 결정 사항 (ADR)
 
 ### ADR-001: 6개 서비스 구조 채택
-- **결정일**: 2025-01-27
+- **결정일**: 2026-01-27
 - **배경**: 초기 계획은 12개의 세분화된 서비스였으나, 학습 프로젝트의 현실적 관리 가능성 고려
 - **결정**: 도메인별 통합 서비스 구조 채택
   - Order + Customer 통합
@@ -518,7 +518,7 @@ inventory-service/
 - **향후 계획**: 트래픽 증가 시 병목 서비스만 선별적 분리
 
 ### ADR-002: UUID 기반 PK 전략 채택
-- **결정일**: 2025-01-27
+- **결정일**: 2026-01-27
 - **배경**: MSA 환경에서 PK 전략 선택 (UUID vs BIGSERIAL)
 - **결정**: 모든 서비스에서 UUID 사용
 - **장점**:
@@ -534,7 +534,7 @@ inventory-service/
   - BaseEntity에 주석으로 명시
 
 ### ADR-003: BaseEntity + AuditorAware 패턴 채택
-- **결정일**: 2025-01-27
+- **결정일**: 2026-01-27
 - **배경**: 모든 Entity에 Audit 정보 (생성자/수정자/생성일/수정일) 필요
 - **결정**: Spring Data JPA의 @MappedSuperclass와 AuditorAware 사용
 - **장점**:
@@ -546,7 +546,7 @@ inventory-service/
   - 향후 Spring Security Context 또는 API Gateway 헤더에서 사용자 ID 추출 예정
 
 ### ADR-004: Common Service 통합 구조 채택
-- **결정일**: 2025-01-27
+- **결정일**: 2026-01-27
 - **배경**: User, Code, File 등 공통 기능을 별도 서비스로 분리할지, 하나의 서비스로 통합할지 결정 필요
 - **결정**: 단일 Common Service로 통합하되 도메인별 패키지 분리
 - **장점**:
@@ -568,7 +568,7 @@ inventory-service/
 - **향후 계획**: 특정 도메인의 트래픽이 급증하면 분리 고려
 
 ### ADR-005: DTO 네이밍 컨벤션
-- **결정일**: 2025-01-27
+- **결정일**: 2026-01-27
 - **배경**: DTO 클래스 네이밍의 일관성 필요
 - **결정**: "DTO"는 항상 대문자로 작성
   - ✅ 올바른 예: `UserRequestDTO`, `UserResponseDTO`, `OrderDTO`
@@ -581,7 +581,7 @@ inventory-service/
   - 패키지명은 소문자 유지 (com.scm.common.user.web.dto)
 
 ### ADR-006: API 버전 관리 전략
-- **결정일**: 2025-01-27
+- **결정일**: 2026-01-27
 - **배경**: API의 하위 호환성 유지 및 점진적 업그레이드를 위한 버전 관리 필요
 - **결정**: URL 경로에 버전 명시 (`/{service-name}/api/{version}/`)
   - ✅ 올바른 예: `/common-service/api/v1/`, `/order-service/api/v1/`, `/delivery-service/api/v1/`
@@ -615,7 +615,7 @@ inventory-service/
 
 ## 회고 및 배운 점
 
-### 2025-01-27 (1차: 프로젝트 초기 설정)
+### 2026-01-27 (1차: 프로젝트 초기 설정)
 - **완료**: 
   - 프로젝트 초기 구조 및 Infrastructure 서비스 설정 완료
   - Order Service 완전 구현 (Entity, Repository, Service, REST API)
@@ -627,7 +627,7 @@ inventory-service/
   - 실무적 서비스 분리 기준 (너무 세분화하지 않기)
 - **다음 목표**: WMS, TMS, Common Services 기본 구조 완성
 
-### 2025-01-27 (2차: Entity 구현 완료)
+### 2026-01-27 (2차: Entity 구현 완료)
 - **완료**:
   - 전체 6개 서비스의 Entity/Document 구현 완료 (총 22개)
   - BaseEntity 및 AuditorAware 패턴 적용
@@ -640,7 +640,7 @@ inventory-service/
   - Warehouse Service는 BIGSERIAL이 더 적합하지만 MSA 일관성을 위해 UUID 채택
 - **다음 목표**: Repository 인터페이스 구현 및 Service 레이어 구축
 
-### 2025-01-27 (3차: Common Service 구현 완료)
+### 2026-01-27 (3차: Common Service 구현 완료)
 - **완료**:
   - Common Service 신규 생성 (User 관리 + 향후 확장 가능 구조)
   - User Entity 및 Role Enum 구현
@@ -656,7 +656,7 @@ inventory-service/
   - Common Service가 다른 서비스의 인증/인가 기반이 됨
 - **다음 목표**: JWT 토큰 발급 및 검증 기능 구현, API Gateway JWT 필터 추가
 
-### 2025-01-28 (5차: ReturnOrder Entity 추가 및 정산 시스템 계획 수립)
+### 2026-01-28 (5차: ReturnOrder Entity 추가 및 정산 시스템 계획 수립)
 - **완료**:
   - ReturnOrder Entity 추가 (Warehouse Service)
   - 반송 사유 6가지 정의 (QUALITY_FAIL, QUANTITY_MISMATCH, WRONG_PRODUCT, DAMAGE, CUSTOMER_CANCEL, DELIVERY_FAIL)
@@ -671,7 +671,7 @@ inventory-service/
   - 비즈니스 메서드로 상태 전이를 명시적으로 제어하여 불법 상태 방지
 - **다음 목표**: Repository 및 Service 레이어 구현, 정산 시스템 설계
 
-### 2025-01-28 (6차: Kafka UI, Swagger, Postman, API Gateway 인증)
+### 2026-01-28 (6차: Kafka UI, Swagger, Postman, API Gateway 인증)
 - **완료**:
   - Docker Compose 이미지 버전 명시 (:latest → 특정 버전)
     - Kafka UI: v0.7.2
@@ -752,7 +752,7 @@ inventory-service/
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [Database per Service Pattern](https://microservices.io/patterns/data/database-per-service.html)
 
-### 2025-01-28 (7차: JWT 인증 및 로그인 기능 구현 완료)
+### 2026-01-28 (7차: JWT 인증 및 로그인 기능 구현 완료)
 - **완료**:
   - JWT 인증 인프라 완전 구현
     - JwtProvider: 토큰 생성/검증/파싱 유틸리티
@@ -780,6 +780,6 @@ inventory-service/
 
 ---
 
-**마지막 업데이트**: 2025-02-05 (JWT 인증 및 로그인 기능 구현 완료)
+**마지막 업데이트**: 2026-02-05 (JWT 인증 및 로그인 기능 구현 완료)
 **업데이트 담당**: SCM Team
 **총 Entity/Document 수**: 25개 (Order: 4, Inventory: 2, Warehouse: 9, Delivery: 5, Notification: 2, Analytics: 3, Common: 2)

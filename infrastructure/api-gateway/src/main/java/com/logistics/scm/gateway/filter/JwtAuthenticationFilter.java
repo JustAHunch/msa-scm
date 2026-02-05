@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  * - 로그아웃된 토큰은 Redis 블랙리스트에서 확인하여 차단
  * 
  * @author c.h.jo
- * @since 2025-01-28
+ * @since 2026-01-28
  */
 @Component
 public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {

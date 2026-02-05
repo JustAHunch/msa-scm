@@ -14,7 +14,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * Spring Cloud Gateway는 Reactive 기반이므로 ReactiveRedisTemplate을 사용합니다.
  * 
  * @author c.h.jo
- * @since 2025-02-05
+ * @since 2026-02-05
  */
 @Configuration
 public class RedisConfig {

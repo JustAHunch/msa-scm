@@ -5,7 +5,7 @@ package com.logistics.scm.oms.inventory.common.exception;
  * 요청한 리소스를 찾을 수 없을 때 발생
  *
  * @author c.h.jo
- * @since 2025-02-05
+ * @since 2026-02-05
  */
 public class EntityNotFoundException extends BaseException {
 

@@ -207,5 +207,5 @@ pm.environment.set("orderId", jsonData.orderId);
 
 ---
 
-**마지막 업데이트**: 2025-01-28
+**마지막 업데이트**: 2026-01-28
 **버전**: 1.0.0
