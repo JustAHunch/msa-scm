@@ -279,21 +279,214 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 - [ ] TROUBLESHOOTING.md: 문제 해결 가이드
 - [ ] PERFORMANCE_TUNING.md: 성능 최적화 가이드
 
+## Phase 9: Kafka 이벤트 기반 통신 구현 (진행 중) 🔄
+
+### 목표
+Order Service와 Inventory Service 간 Kafka 이벤트 기반 통신을 통한:
+1. 주문 생성 → 재고 차감
+2. 주문 취소 → 재고 원복 (보상 트랜잭션)
+3. Saga Pattern (Choreography) 구현
+
+### Phase 9-1: Inventory Service 기본 구조 구축
+**작업 기간**: 1-2일  
+**목적**: 재고 관리 핵심 기능 구현
+
+- [ ] **Repository 구현** (진행 중)
+  - [ ] InventoryRepository (재고 조회/업데이트)
+  - [ ] StockMovementRepository (재고 이동 이력)
+  
+- [ ] **Service 레이어 구현** (진행 중)
+  - [ ] InventoryService 인터페이스
+  - [ ] InventoryServiceImpl 구현
+    - [ ] reserveStock() - 재고 차감
+    - [ ] releaseStock() - 재고 원복
+    - [ ] checkStock() - 재고 확인
+  - [ ] 동시성 제어 (Pessimistic Lock)
+  - [ ] Redis 캐싱 적용
+  
+- [x] **Inventory Entity 수정**
+  - [x] reserve() 메서드 추가 (재고 예약)
+  - [x] release() 메서드 추가 (재고 원복)
+  - [x] increaseAvailableQuantity() 메서드 추가
+  - [x] updateSafetyStock() 메서드 추가
+  - [x] Getter 별칭 추가 (getId, getAvailableQuantity 등)
+  
+- [ ] **Exception 정의**
+  - [ ] InsufficientStockException (재고 부족)
+  - [ ] InventoryNotFoundException (재고 없음)
+  
+- [ ] **DTO 정의**
+  - [ ] ReserveStockRequestDTO
+  - [ ] ReleaseStockRequestDTO
+  - [ ] InventoryResponseDTO
+
+### Phase 9-2: Kafka 이벤트 인프라 구축
+**작업 기간**: 1일  
+**목적**: 이벤트 발행/구독 기반 마련
+
+- [ ] **Order Service 이벤트 클래스**
+  - [ ] OrderCreatedEvent (주문 생성 이벤트)
+  - [ ] OrderCancelledEvent (주문 취소 이벤트)
+  
+- [ ] **Inventory Service 이벤트 클래스**
+  - [ ] InventoryReservedEvent (재고 예약 완료)
+  - [ ] InventoryReservationFailedEvent (재고 예약 실패)
+  - [ ] InventoryReleasedEvent (재고 원복 완료)
+  
+- [ ] **Kafka 설정**
+  - [ ] Order Service - KafkaProducerConfig
+  - [ ] Order Service - KafkaConsumerConfig
+  - [ ] Inventory Service - KafkaProducerConfig
+  - [ ] Inventory Service - KafkaConsumerConfig
+  - [ ] Topic 정의 (order.events, inventory.events)
+  - [ ] Serializer/Deserializer 설정 (JSON)
+
+### Phase 9-3: 주문 생성 → 재고 차감 정상 흐름
+**작업 기간**: 1-2일  
+**목적**: 기본 이벤트 흐름 구현
+
+**시나리오**:
+```
+1. 사용자 → POST /api/orders
+2. Order Service: 주문 생성 (상태: CREATED)
+3. Order Service: OrderCreatedEvent 발행 → Kafka
+4. Inventory Service: 이벤트 수신 → 재고 차감
+5. Inventory Service: InventoryReservedEvent 발행 → Kafka
+6. Order Service: 이벤트 수신 → 주문 상태 업데이트 (CONFIRMED)
+```
+
+- [ ] **Order Service 수정**
+  - [ ] OrderServiceImpl.createOrder() - 이벤트 발행 로직
+  - [ ] InventoryEventListener - 재고 예약 완료 이벤트 처리
+  - [ ] Order 상태 업데이트 메서드 (confirmOrder)
+  
+- [ ] **Inventory Service 구현**
+  - [ ] OrderEventListener - 주문 생성 이벤트 처리
+  - [ ] InventoryService.reserveStock() - 재고 차감
+  - [ ] StockMovement 이력 기록 (타입: RESERVED)
+  
+- [ ] **통합 테스트**
+  - [ ] 주문 생성 → 재고 차감 → 주문 확정 전체 흐름 검증
+
+### Phase 9-4: 주문 취소 → 재고 원복 보상 트랜잭션
+**작업 기간**: 1-2일  
+**목적**: 실패 시나리오 및 Saga 패턴 구현
+
+**시나리오 1: 재고 부족으로 주문 실패**
+```
+1. 사용자 → POST /api/orders
+2. Order Service: 주문 생성 (상태: CREATED)
+3. Order Service: OrderCreatedEvent 발행
+4. Inventory Service: 재고 부족 감지
+5. Inventory Service: InventoryReservationFailedEvent 발행
+6. Order Service: 주문 취소 (상태: CANCELLED)
+```
+
+**시나리오 2: 사용자 주문 취소**
+```
+1. 사용자 → DELETE /api/orders/{id}
+2. Order Service: 주문 취소 (상태: CANCELLED)
+3. Order Service: OrderCancelledEvent 발행
+4. Inventory Service: 예약 재고 해제
+5. Inventory Service: InventoryReleasedEvent 발행
+```
+
+- [ ] **Order Service 수정**
+  - [ ] OrderService.cancelOrder() - 주문 취소 API
+  - [ ] OrderCancelledEvent 발행 로직
+  - [ ] InventoryEventListener - 재고 예약 실패 이벤트 처리
+  
+- [ ] **Inventory Service 구현**
+  - [ ] OrderEventListener - 주문 취소 이벤트 처리
+  - [ ] InventoryService.releaseStock() - 재고 원복
+  - [ ] StockMovement 이력 기록 (타입: RELEASED)
+  
+- [ ] **Exception Handling**
+  - [ ] 재고 부족 시 실패 이벤트 발행
+  - [ ] DLQ(Dead Letter Queue) 설정
+  
+- [ ] **통합 테스트**
+  - [ ] 재고 부족 시나리오 테스트
+  - [ ] 주문 취소 시나리오 테스트
+
+### Phase 9-5: Outbox Pattern 적용 (선택)
+**작업 기간**: 1-2일  
+**목적**: 이벤트 발행 신뢰성 보장
+
+- [ ] **Outbox Entity 및 Repository**
+  - [ ] Order Service - Outbox Entity
+  - [ ] Order Service - OutboxRepository
+  - [ ] Inventory Service - Outbox Entity
+  - [ ] Inventory Service - OutboxRepository
+  
+- [ ] **Outbox 이벤트 저장 로직**
+  - [ ] DB 트랜잭션 내에서 Outbox 테이블에 이벤트 저장
+  
+- [ ] **Scheduler/Polling 구현**
+  - [ ] OutboxEventPublisher (주기적 폴링)
+  - [ ] 미발행 이벤트를 Kafka로 발행
+  - [ ] 발행 완료 후 상태 업데이트
+  
+- [ ] **테스트**
+  - [ ] Kafka 장애 시나리오 테스트
+  - [ ] 이벤트 재발행 테스트
+
+### 예상 산출물
+```
+order-service/
+├── event/
+│   ├── OrderCreatedEvent.java
+│   ├── OrderCancelledEvent.java
+│   └── listener/
+│       └── InventoryEventListener.java
+├── config/
+│   ├── KafkaProducerConfig.java
+│   └── KafkaConsumerConfig.java
+└── entity/
+    └── Outbox.java (Phase 9-5)
+
+inventory-service/
+├── repository/
+│   ├── InventoryRepository.java
+│   └── StockMovementRepository.java
+├── service/
+│   ├── InventoryService.java
+│   └── InventoryServiceImpl.java
+├── event/
+│   ├── InventoryReservedEvent.java
+│   ├── InventoryReservationFailedEvent.java
+│   ├── InventoryReleasedEvent.java
+│   └── listener/
+│       └── OrderEventListener.java
+├── config/
+│   ├── KafkaProducerConfig.java
+│   └── KafkaConsumerConfig.java
+├── exception/
+│   ├── InsufficientStockException.java
+│   └── InventoryNotFoundException.java
+└── entity/
+    └── Outbox.java (Phase 9-5)
+```
+
 ## 다음 단계 (Next Steps)
 
+### 현재 진행 중 (Phase 9)
+1. 🔄 **Phase 9-1**: Inventory Service 기본 구조 구축 (시작 예정)
+2. 📅 Phase 9-2: Kafka 이벤트 인프라 구축
+3. 📅 Phase 9-3: 주문 생성 → 재고 차감 정상 흐름
+4. 📅 Phase 9-4: 주문 취소 → 재고 원복 보상 트랜잭션
+5. 📅 Phase 9-5: Outbox Pattern 적용 (선택)
+
 ### 우선순위 높음
-1. [ ] Inventory Service Entity 및 Repository 구현
-2. [ ] Warehouse Service 기본 구조 생성
-3. [ ] Delivery Service 기본 구조 생성
-4. [ ] Notification Service 기본 구조 생성
-5. [ ] Analytics Service 기본 구조 생성
+1. [ ] Warehouse Service Repository 및 Service 구현
+2. [ ] Delivery Service Repository 및 Service 구현
+3. [ ] Notification Service 기본 구현
+4. [ ] Analytics Service 기본 구현
 
 ### 우선순위 중간
-1. [ ] Order Service 비즈니스 로직 확장
-2. [ ] Kafka 이벤트 발행/구독 구현
-3. [ ] API Gateway 인증/인가 설정
-4. [ ] 재고 동시성 제어 구현
-5. [ ] 정산 시스템 설계 및 구현
+1. [ ] Order Service 비즈니스 로직 확장 (주문 상태 관리)
+2. [ ] API Gateway Rate Limiting 설정
+3. [ ] 정산 시스템 설계 및 구현
    - Settlement Service 신규 생성 또는 기존 서비스 통합 결정
    - DeliveryCost Entity: 배송비 계산 및 정산
    - ReturnCost Entity: 반송 비용 정산

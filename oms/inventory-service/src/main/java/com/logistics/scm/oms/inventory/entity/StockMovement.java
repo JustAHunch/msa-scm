@@ -2,10 +2,7 @@ package com.logistics.scm.oms.inventory.entity;
 
 import com.logistics.scm.oms.inventory.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -23,6 +20,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "STOCK_MOVEMENT_TB", indexes = {
     @Index(name = "idx_inventory_id", columnList = "inventory_id"),
@@ -43,33 +42,35 @@ public class StockMovement extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "movement_type", nullable = false, length = 20)
-    private MovementType movementType;
+    private StockMovementType movementType;
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "reference_type", nullable = false, length = 50)
-    private String referenceType;
+    @Column(name = "reference_order_id", length = 100)
+    private String referenceOrderId;
 
-    @Column(name = "reference_id", nullable = false, columnDefinition = "uuid")
-    private UUID referenceId;
+    @Column(name = "remarks", length = 500)
+    private String remarks;
 
-    @Column(name = "previous_qty", nullable = false)
+    @Column(name = "previous_qty")
     private Integer previousQty;
 
-    @Column(name = "current_qty", nullable = false)
+    @Column(name = "current_qty")
     private Integer currentQty;
 
     @Column(name = "movement_date", nullable = false)
     private LocalDateTime movementDate;
 
-    // Enum for Movement Type
-    public enum MovementType {
-        IN,         // 입고
-        OUT,        // 출고
-        ADJUST,     // 재고 조정
-        RESERVE,    // 예약
-        RELEASE     // 예약 해제
+    @PrePersist
+    public void prePersist() {
+        if (this.movementDate == null) {
+            this.movementDate = LocalDateTime.now();
+        }
     }
 
+    // Getter alias
+    public UUID getId() {
+        return this.movementId;
+    }
 }

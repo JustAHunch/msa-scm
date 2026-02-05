@@ -1,0 +1,12 @@
+package com.logistics.scm.oms.inventory.entity;
+
+/**
+ * 재고 이동 유형
+ */
+public enum StockMovementType {
+    INBOUND,    // 입고
+    OUTBOUND,   // 출고
+    ADJUST,     // 재고 조정
+    RESERVED,   // 예약 (주문 생성 시)
+    RELEASED    // 예약 해제 (주문 취소 시)
+}
