@@ -1,7 +1,7 @@
 package com.logistics.scm.oms.order.config;
 
-import com.logistics.scm.oms.order.event.OrderCancelledEvent;
-import com.logistics.scm.oms.order.event.OrderCreatedEvent;
+import com.logistics.scm.oms.order.event.order.OrderCancelledEvent;
+import com.logistics.scm.oms.order.event.order.OrderCreatedEvent;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;

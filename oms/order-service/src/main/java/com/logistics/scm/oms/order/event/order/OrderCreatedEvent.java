@@ -1,24 +1,25 @@
-package com.logistics.scm.oms.order.event;
+package com.logistics.scm.oms.order.event.order;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 주문 취소 이벤트
+ * 주문 생성 이벤트
  * 
- * 주문이 취소되었을 때 Kafka로 발행되는 이벤트
- * Inventory Service가 이 이벤트를 구독하여 예약된 재고를 해제함
+ * 주문이 생성되었을 때 Kafka로 발행되는 이벤트
+ * Inventory Service가 이 이벤트를 구독하여 재고를 차감함
  */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrderCancelledEvent {
+public class OrderCreatedEvent {
 
     /**
      * 이벤트 고유 ID
@@ -36,19 +37,24 @@ public class OrderCancelledEvent {
     private String orderNumber;
 
     /**
-     * 취소 사유
+     * 고객 ID
      */
-    private String cancelReason;
+    private String customerId;
 
     /**
-     * 주문 항목 리스트 (재고 원복용)
+     * 주문 항목 리스트
      */
     private List<OrderItemEvent> items;
 
     /**
+     * 총 금액
+     */
+    private BigDecimal totalAmount;
+
+    /**
      * 이벤트 발생 시각
      */
-    private LocalDateTime cancelledAt;
+    private LocalDateTime createdAt;
 
     /**
      * 주문 항목 이벤트
@@ -70,7 +76,12 @@ public class OrderCancelledEvent {
         private Integer quantity;
 
         /**
-         * 창고 ID
+         * 단가
+         */
+        private BigDecimal price;
+
+        /**
+         * 창고 ID (재고 차감할 창고)
          */
         private String warehouseId;
     }
