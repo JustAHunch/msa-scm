@@ -185,7 +185,7 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 
 **진행 상황**:
 - [x] 프로젝트 구조 생성
-- [x] 의존성 설정 (Web, JPA, PostgreSQL, Eureka, Security)
+- [x] 의존성 설정 (Web, JPA, PostgreSQL, Eureka, Security, JWT)
 - [x] Application 클래스 작성
 - [x] application.yml 설정
 - [x] BaseEntity 및 AuditorAware 구현
@@ -193,11 +193,14 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 - [x] UserRepository 구현
 - [x] UserService 구현 (인증, CRUD, 비밀번호 관리)
 - [x] UserResource (REST API) 구현
-- [x] SecurityConfig 구현 (PasswordEncoder)
+- [x] SecurityConfig 구현 (PasswordEncoder, AuthenticationManager)
 - [x] Docker Compose에 common-db 추가 (Port: 5436)
-- [x] API Gateway 라우팅 설정 (/api/users/v1/**)
-- [ ] JWT 토큰 발급 기능
-- [ ] JWT 검증 API
+- [x] API Gateway 라우팅 설정 (/api/auth/**)
+- [x] JWT 토큰 발급 기능 (JwtProvider, JwtProperties)
+- [x] JWT 검증 API (AuthService, AuthResource)
+- [x] OpenAPI/Swagger 문서화 (SpringDoc 3.0)
+- [x] 초기 사용자 데이터 로더 (DataLoader)
+- [x] Postman Collection 생성 (Auth API 테스트)
 - [ ] 테스트 코드 작성
 
 ### Notification Service (8091)
@@ -556,8 +559,34 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [Database per Service Pattern](https://microservices.io/patterns/data/database-per-service.html)
 
+### 2025-01-28 (7차: JWT 인증 및 로그인 기능 구현 완료)
+- **완료**:
+  - JWT 인증 인프라 완전 구현
+    - JwtProvider: 토큰 생성/검증/파싱 유틸리티
+    - JwtProperties: application.yml 설정 바인딩
+    - AuthService: 로그인 및 토큰 갱신 비즈니스 로직
+    - AuthResource: 인증 REST API (login, refresh, validate, logout)
+  - OpenAPI/Swagger 문서화 완료
+    - OpenApiConfig: JWT Bearer 인증 설정
+    - AuthResource에 @Operation, @ApiResponse 어노테이션 추가
+  - 초기 사용자 데이터 자동 생성
+    - DataLoader: 테스트 계정 4개 자동 생성 (admin, manager, operator, customer)
+  - Postman Collection 추가
+    - Common-Service-Auth-API.postman_collection.json
+    - 로그인, 토큰 검증, 갱신, 로그아웃 API 테스트
+  - application.yml JWT Secret Key 통일 (Common Service ↔ API Gateway)
+  - API Gateway 인증 라우트 추가 (/api/auth/**)
+- **배운 점**:
+  - JJWT 0.12.x 버전의 새로운 API 사용법 (Keys.hmacShaKeyFor, verifyWith)
+  - Spring Security AuthenticationManager를 활용한 로그인 인증 처리
+  - JWT Access Token과 Refresh Token의 분리 관리
+  - Stateless JWT 인증의 로그아웃 처리 (향후 Redis 블랙리스트 구현 예정)
+  - Common Service가 인증 허브 역할을 하며 API Gateway는 토큰 검증만 수행
+  - CommandLineRunner를 활용한 초기 데이터 로딩 패턴
+- **다음 목표**: Repository 및 Service 레이어 구현, 전체 시스템 통합 테스트
+
 ---
 
-**마지막 업데이트**: 2025-01-28 (Swagger, Postman, API Gateway 인증/인가 구현)
+**마지막 업데이트**: 2025-02-05 (JWT 인증 및 로그인 기능 구현 완료)
 **업데이트 담당**: SCM Team
 **총 Entity/Document 수**: 25개 (Order: 4, Inventory: 2, Warehouse: 9, Delivery: 5, Notification: 2, Analytics: 3, Common: 2)

@@ -1,0 +1,288 @@
+{
+	"info": {
+		"_postman_id": "common-auth-api-001",
+		"name": "Common Service - Auth API",
+		"description": "SCM MSA - Common Service 인증 API 테스트 컬렉션",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "1. Login (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// 응답 상태 코드 확인",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// 응답 본문 파싱",
+									"var jsonData = pm.response.json();",
+									"",
+									"// Access Token 저장",
+									"pm.test(\"Access Token exists\", function () {",
+									"    pm.expect(jsonData.accessToken).to.exist;",
+									"    pm.environment.set(\"accessToken\", jsonData.accessToken);",
+									"});",
+									"",
+									"// Refresh Token 저장",
+									"pm.test(\"Refresh Token exists\", function () {",
+									"    pm.expect(jsonData.refreshToken).to.exist;",
+									"    pm.environment.set(\"refreshToken\", jsonData.refreshToken);",
+									"});",
+									"",
+									"// 사용자 정보 확인",
+									"pm.test(\"Username is admin\", function () {",
+									"    pm.expect(jsonData.username).to.eql(\"admin\");",
+									"});",
+									"",
+									"pm.test(\"Role is ROLE_ADMIN\", function () {",
+									"    pm.expect(jsonData.role).to.include(\"ADMIN\");",
+									"});",
+									"",
+									"console.log(\"Access Token: \" + jsonData.accessToken);",
+									"console.log(\"Refresh Token: \" + jsonData.refreshToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "관리자 계정으로 로그인하여 JWT 토큰을 발급받습니다."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Validate Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Token is valid\", function () {",
+									"    pm.expect(jsonData.valid).to.be.true;",
+									"});",
+									"",
+									"pm.test(\"Username exists\", function () {",
+									"    pm.expect(jsonData.username).to.exist;",
+									"});",
+									"",
+									"console.log(\"Token validation result: \" + JSON.stringify(jsonData));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"{{accessToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/validate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"validate"
+							]
+						},
+						"description": "JWT 토큰의 유효성을 검증합니다."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"New Access Token exists\", function () {",
+									"    pm.expect(jsonData.accessToken).to.exist;",
+									"    pm.environment.set(\"accessToken\", jsonData.accessToken);",
+									"});",
+									"",
+									"console.log(\"New Access Token: \" + jsonData.accessToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Refresh-Token",
+								"value": "{{refreshToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "Refresh Token을 사용하여 새로운 Access Token을 발급받습니다."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"console.log(\"Logout successful\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "로그아웃을 처리합니다."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Login (Manager)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"pm.environment.set(\"accessToken\", jsonData.accessToken);",
+									"pm.environment.set(\"refreshToken\", jsonData.refreshToken);",
+									"",
+									"pm.test(\"Role is ROLE_MANAGER\", function () {",
+									"    pm.expect(jsonData.role).to.include(\"MANAGER\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"manager\",\n    \"password\": \"manager123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "인증 관련 API 테스트"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8090",
+			"type": "string"
+		}
+	]
+}

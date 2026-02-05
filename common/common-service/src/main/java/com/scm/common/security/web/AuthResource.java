@@ -3,6 +3,14 @@ package com.scm.common.security.web;
 import com.scm.common.security.jwt.JwtProvider;
 import com.scm.common.security.service.AuthService;
 import com.scm.common.user.web.dto.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,12 +28,13 @@ import java.util.Date;
  * Base URL: /api/auth
  * 
  * @author c.h.jo
- * @since 2025-01-28
+ * @since 2026-01-28
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Authentication", description = "인증 및 JWT 토큰 관리 API")
 public class AuthResource {
 
     private final AuthService authService;
@@ -39,6 +48,21 @@ public class AuthResource {
      * @param loginRequest 로그인 요청 DTO
      * @return JWT 토큰 응답 DTO
      */
+    @Operation(
+            summary = "로그인",
+            description = "사용자명과 비밀번호로 로그인하여 JWT Access Token과 Refresh Token을 발급받습니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "로그인 성공",
+                    content = @Content(schema = @Schema(implementation = JwtResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 - 잘못된 사용자명 또는 비밀번호"
+            )
+    })
     @PostMapping("/login")
     public ResponseEntity<JwtResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
         log.info("Login attempt for user: {}", loginRequest.getUsername());
@@ -60,8 +84,25 @@ public class AuthResource {
      * @param refreshToken Refresh Token
      * @return 새로운 JWT 토큰 응답 DTO
      */
+    @Operation(
+            summary = "토큰 갱신",
+            description = "Refresh Token을 사용하여 새로운 Access Token을 발급받습니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "토큰 갱신 성공",
+                    content = @Content(schema = @Schema(implementation = JwtResponseDTO.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "유효하지 않은 Refresh Token"
+            )
+    })
     @PostMapping("/refresh")
-    public ResponseEntity<JwtResponseDTO> refreshToken(@RequestHeader("Refresh-Token") String refreshToken) {
+    public ResponseEntity<JwtResponseDTO> refreshToken(
+            @Parameter(description = "Refresh Token", required = true)
+            @RequestHeader("Refresh-Token") String refreshToken) {
         log.info("Token refresh requested");
         
         try {
@@ -83,6 +124,17 @@ public class AuthResource {
      * @param request 토큰 검증 요청 DTO
      * @return 토큰 검증 응답 DTO
      */
+    @Operation(
+            summary = "토큰 검증",
+            description = "JWT 토큰의 유효성을 검증하고 사용자 정보를 반환합니다. API Gateway에서 내부적으로 호출합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "토큰 검증 완료 (유효/무효 여부는 응답 body의 valid 필드 참조)",
+                    content = @Content(schema = @Schema(implementation = TokenValidationResponseDTO.class))
+            )
+    })
     @PostMapping("/validate")
     public ResponseEntity<TokenValidationResponseDTO> validateToken(
             @Valid @RequestBody TokenValidationRequestDTO request) {
@@ -145,8 +197,21 @@ public class AuthResource {
      * 
      * @return 로그아웃 성공 메시지
      */
+    @Operation(
+            summary = "로그아웃",
+            description = "로그아웃 처리를 수행합니다. JWT는 Stateless이므로 클라이언트에서 토큰을 삭제해야 합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "로그아웃 성공"
+            )
+    })
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<String> logout(
+            @Parameter(description = "Authorization 헤더 (Bearer {token})", required = true)
+            @RequestHeader("Authorization") String authHeader) {
         // Bearer 토큰에서 실제 토큰 추출
         String token = authHeader.substring(7);
         

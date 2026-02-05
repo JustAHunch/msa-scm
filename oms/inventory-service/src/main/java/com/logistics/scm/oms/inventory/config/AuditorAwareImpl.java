@@ -2,28 +2,51 @@ package com.logistics.scm.oms.inventory.config;
 
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
 /**
  * Auditor Aware Implementation
  * 
  * 현재 작업자 정보를 제공합니다.
- * - 현재는 "SYSTEM"을 반환
- * - 향후 Spring Security Context에서 실제 사용자 정보 추출 예정
- * - API Gateway에서 전달된 X-User-Id 헤더 활용 가능
+ * - API Gateway에서 전달된 X-User-Name 헤더에서 사용자명 추출
+ * - 헤더가 없는 경우 "SYSTEM" 반환
  * 
- * TODO: 인증 시스템 구축 시 실제 사용자 정보로 변경
+ * API Gateway JWT 필터에서 설정하는 헤더:
+ * - X-User-Name: 사용자명
+ * - X-User-Role: 사용자 권한
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Component
 public class AuditorAwareImpl implements AuditorAware<String> {
 
+    private static final String USER_HEADER = "X-User-Name";
+    private static final String DEFAULT_AUDITOR = "SYSTEM";
+
     @Override
     public Optional<String> getCurrentAuditor() {
-        // TODO: Spring Security Context 또는 ThreadLocal에서 실제 사용자 ID 추출
-        return Optional.of("SYSTEM");
+        try {
+            ServletRequestAttributes attributes = 
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            
+            if (attributes != null) {
+                HttpServletRequest request = attributes.getRequest();
+                String username = request.getHeader(USER_HEADER);
+                
+                if (username != null && !username.isEmpty()) {
+                    return Optional.of(username);
+                }
+            }
+        } catch (Exception e) {
+            // RequestContext가 없는 경우 (비동기 작업, 스케줄러 등)
+            // SYSTEM으로 처리
+        }
+        
+        return Optional.of(DEFAULT_AUDITOR);
     }
 }

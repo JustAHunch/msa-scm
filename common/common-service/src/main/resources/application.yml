@@ -35,7 +35,7 @@ spring:
 jwt:
   # Base64로 인코딩된 Secret Key (256비트 이상)
   # 운영 환경에서는 반드시 환경 변수로 관리
-  secret: U0NNLU1TQS1KV1QtU0VDUkVULUtFWS0yMDI1LVBMRUFTR (CHANGE-VEhJUy1JTi1QUk9EVUNUSU9OLUVOVEVST05NRU5ULVVTRS1TVFJPTkctU0VDUkVU
+  secret: ${JWT_SECRET:scm-jwt-secret-key-minimum-256-bits-required-for-hs256-algorithm-this-is-example-key}
   expiration: 86400000  # 24시간 (밀리초)
   refresh-expiration: 604800000  # 7일 (밀리초)
 
