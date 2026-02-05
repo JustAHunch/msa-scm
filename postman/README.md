@@ -178,7 +178,7 @@ docker-compose logs order-service
 401 Unauthorized
 ```
 **해결**: 새로운 JWT 토큰 발급 후 환경 변수에 설정
-1. Common Service에서 `/api/auth/login` 호출
+1. Common Service에서 `/api/v1/auth/login` 호출
 2. 반환된 토큰을 `jwtToken` 변수에 저장
 
 ### orderId가 설정되지 않음

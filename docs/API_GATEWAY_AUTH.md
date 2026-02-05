@@ -192,7 +192,7 @@ spring:
 | `/v3/api-docs/**` | OpenAPI 문서 | `GET /v3/api-docs` |
 | `/api-docs/**` | API 문서 | `GET /order-service/api-docs` |
 | `/eureka/**` | Eureka 관련 | `GET /eureka` |
-| `/api/auth/**` | 인증 API | `POST /api/auth/login` |
+| `/api/v1/auth/**` | 인증 API | `POST /api/v1/auth/login` |
 
 **코드 위치**: `JwtAuthenticationFilter.isExcludedPath()`
 
@@ -205,7 +205,7 @@ private boolean isExcludedPath(String path) {
            path.contains("/v3/api-docs") ||
            path.contains("/api-docs") ||
            path.startsWith("/eureka") ||
-           path.contains("/api/auth/") ||
+           path.contains("/api/v1/auth/") ||
            path.contains("/public/");  // 추가 예시
 }
 ```
@@ -216,7 +216,7 @@ private boolean isExcludedPath(String path) {
 
 ```bash
 # 로그인 (JWT 토큰 발급)
-curl -X POST http://localhost:8090/api/auth/login \
+curl -X POST http://localhost:8090/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "username": "admin",
@@ -307,7 +307,7 @@ jwt:
 
 ```bash
 # 재로그인
-curl -X POST http://localhost:8090/api/auth/login \
+curl -X POST http://localhost:8090/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "admin123"}'
 ```

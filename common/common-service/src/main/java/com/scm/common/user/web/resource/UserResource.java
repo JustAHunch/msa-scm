@@ -159,26 +159,6 @@ public class UserResource {
     }
 
     /**
-     * 로그인
-     * 
-     * POST /api/v1/users/login
-     * 
-     * @param request 로그인 요청 (username, password)
-     * @return 200 OK + 사용자 정보 (향후 JWT 토큰 추가 예정)
-     */
-    @PostMapping("/login")
-    public ResponseEntity<UserResponseDTO> login(
-            @Valid @RequestBody UserRequestDTO.Login request) {
-        
-        log.info("Login attempt: username={}", request.getUsername());
-        
-        User user = userService.authenticate(request.getUsername(), request.getPassword());
-        
-        // TODO: JWT 토큰 생성 및 반환
-        return ResponseEntity.ok(UserResponseDTO.from(user));
-    }
-
-    /**
      * 비밀번호 변경
      * 
      * POST /api/v1/users/{id}/password

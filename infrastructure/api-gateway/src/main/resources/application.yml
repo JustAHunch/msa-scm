@@ -23,14 +23,6 @@ spring:
         - JwtAuthenticationFilter  # JWT 인증 필터 적용
       # 라우트 설정
       routes:
-        # Auth Routes (JWT 발급 및 검증) - Common Service
-        - id: auth-service
-          uri: lb://common-service
-          predicates:
-            - Path=/api/auth/**
-          filters:
-            - RewritePath=/api/auth/(?<segment>.*), /api/auth/$\{segment}
-        
         # Common Services Routes
         - id: common-service
           uri: lb://common-service

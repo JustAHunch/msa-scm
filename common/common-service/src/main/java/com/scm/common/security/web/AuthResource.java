@@ -26,14 +26,14 @@ import java.util.Date;
  * 
  * JWT 토큰 발급 및 검증 API를 제공합니다.
  * 
- * Base URL: /api/auth
+ * Base URL: /api/v1/auth
  * 
  * @author c.h.jo
  * @since 2026-01-28
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Tag(name = "Authentication", description = "인증 및 JWT 토큰 관리 API")
 public class AuthResource {
@@ -45,7 +45,7 @@ public class AuthResource {
     /**
      * 로그인 및 JWT 토큰 발급
      * 
-     * POST /api/auth/login
+     * POST /api/v1/auth/login
      * 
      * @param loginRequest 로그인 요청 DTO
      * @return JWT 토큰 응답 DTO
@@ -81,7 +81,7 @@ public class AuthResource {
     /**
      * Access Token 갱신
      * 
-     * POST /api/auth/refresh
+     * POST /api/v1/auth/refresh
      * 
      * @param refreshToken Refresh Token
      * @return 새로운 JWT 토큰 응답 DTO
@@ -124,7 +124,7 @@ public class AuthResource {
     /**
      * JWT 토큰 검증
      * 
-     * POST /api/auth/validate
+     * POST /api/v1/auth/validate
      * 
      * API Gateway에서 호출하여 토큰의 유효성을 검증합니다.
      * 
@@ -205,7 +205,7 @@ public class AuthResource {
     /**
      * 로그아웃
      * 
-     * POST /api/auth/logout
+     * POST /api/v1/auth/logout
      * 
      * Access Token과 Refresh Token을 모두 Redis 블랙리스트에 추가하여 무효화합니다.
      * 클라이언트는 토큰을 삭제해야 합니다.

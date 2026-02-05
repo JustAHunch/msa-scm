@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
  * - /actuator/health (헬스 체크)
  * - /swagger-ui/** (Swagger UI)
  * - /v3/api-docs/** (OpenAPI Docs)
- * - /api/auth/** (인증 API)
+ * - /api/v1/auth/** (인증 API)
  * 
  * 블랙리스트 체크:
  * - 로그아웃된 토큰은 Redis 블랙리스트에서 확인하여 차단
@@ -106,7 +106,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
      * 인증 제외 경로 확인
      * 
      * JWT 검증을 하지 않을 경로들을 정의합니다.
-     * - /api/auth/login: 로그인 (토큰 발급)
+     * - /api/v1/auth/login: 로그인 (토큰 발급)
      * - /actuator/health: 헬스 체크
      * - Swagger 관련 경로들
      */
@@ -116,7 +116,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                path.contains("/v3/api-docs") ||
                path.contains("/api-docs") ||
                path.startsWith("/eureka") ||
-               path.equals("/api/auth/login"); // login만 제외
+               path.equals("/api/v1/auth/login"); // login만 제외
     }
 
     /**

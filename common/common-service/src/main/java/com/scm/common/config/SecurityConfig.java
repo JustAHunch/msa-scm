@@ -107,7 +107,7 @@ public class SecurityConfig {
                 // 요청별 인가 설정
                 .authorizeHttpRequests(auth -> auth
                         // 인증 API는 모두 허용
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
                         // Actuator 헬스 체크 허용
                         .requestMatchers("/actuator/health").permitAll()
                         // 개발 단계: 모든 요청 허용 (향후 변경 예정)

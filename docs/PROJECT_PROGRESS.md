@@ -195,7 +195,7 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 - [x] UserResource (REST API) 구현
 - [x] SecurityConfig 구현 (PasswordEncoder, AuthenticationManager)
 - [x] Docker Compose에 common-db 추가 (Port: 5436)
-- [x] API Gateway 라우팅 설정 (/api/auth/**)
+- [x] API Gateway 라우팅 설정 (/api/v1/auth/**)
 - [x] JWT 토큰 발급 기능 (JwtProvider, JwtProperties)
 - [x] JWT 검증 API (AuthService, AuthResource)
 - [x] OpenAPI/Swagger 문서화 (SpringDoc 3.0)
@@ -768,7 +768,7 @@ inventory-service/
     - Common-Service-Auth-API.postman_collection.json
     - 로그인, 토큰 검증, 갱신, 로그아웃 API 테스트
   - application.yml JWT Secret Key 통일 (Common Service ↔ API Gateway)
-  - API Gateway 인증 라우트 추가 (/api/auth/**)
+  - API Gateway 인증 라우트 추가 (/api/v1/auth/**)
 - **배운 점**:
   - JJWT 0.12.x 버전의 새로운 API 사용법 (Keys.hmacShaKeyFor, verifyWith)
   - Spring Security AuthenticationManager를 활용한 로그인 인증 처리

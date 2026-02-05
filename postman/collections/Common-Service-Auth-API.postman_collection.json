@@ -65,7 +65,7 @@
 							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/auth/login",
+							"raw": "{{baseUrl}}/api/v1/auth/login",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -119,7 +119,7 @@
 							"raw": "{\n    \"token\": \"{{accessToken}}\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/auth/validate",
+							"raw": "{{baseUrl}}/api/v1/auth/validate",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -166,7 +166,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/auth/refresh",
+							"raw": "{{baseUrl}}/api/v1/auth/refresh",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -211,7 +211,7 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/auth/logout",
+							"raw": "{{baseUrl}}/api/v1/auth/logout",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -261,7 +261,7 @@
 							"raw": "{\n    \"username\": \"manager\",\n    \"password\": \"manager123\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/auth/login",
+							"raw": "{{baseUrl}}/api/v1/auth/login",
 							"host": [
 								"{{baseUrl}}"
 							],
