@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Inventory Service Application
@@ -14,6 +15,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * - 안전재고 관리
  * - 멀티 창고 재고 관리
  * - 재고 동기화
+ * - Outbox Pattern을 통한 이벤트 발행
  *
  * Port: 8082
  * Database: PostgreSQL (inventory_db, Port: 5433)
@@ -21,6 +23,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * @author c.h.jo
  * @since 2026-01-27
  */
+@EnableScheduling
 @EnableCaching
 @EnableDiscoveryClient
 @SpringBootApplication

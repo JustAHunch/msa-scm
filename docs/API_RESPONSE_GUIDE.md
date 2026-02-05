@@ -1023,4 +1023,4 @@ public class InsufficientStockException extends BusinessException {
 
 **작성일**: 2026-02-05  
 **버전**: 1.0  
-**작성자**: SCM Team
+**작성자**: c.h.jo

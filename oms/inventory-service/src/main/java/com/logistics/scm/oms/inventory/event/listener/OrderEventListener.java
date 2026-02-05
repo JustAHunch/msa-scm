@@ -1,5 +1,6 @@
 package com.logistics.scm.oms.inventory.event.listener;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logistics.scm.oms.inventory.domain.inventory.dto.request.ReleaseStockRequest;
 import com.logistics.scm.oms.inventory.domain.inventory.dto.request.ReserveStockRequest;
 import com.logistics.scm.oms.inventory.event.inventory.InventoryReleasedEvent;
@@ -9,11 +10,10 @@ import com.logistics.scm.oms.inventory.event.order.OrderCancelledEvent;
 import com.logistics.scm.oms.inventory.event.order.OrderCreatedEvent;
 import com.logistics.scm.oms.inventory.domain.inventory.exception.InsufficientStockException;
 import com.logistics.scm.oms.inventory.domain.inventory.service.InventoryService;
+import com.logistics.scm.oms.inventory.event.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -25,6 +25,7 @@ import java.util.UUID;
  * 주문 이벤트 리스너
  * 
  * Order Service에서 발행한 이벤트를 구독하여 재고 관리 수행
+ * Outbox Pattern 적용: 재고 변경과 이벤트를 동일 트랜잭션으로 처리
  */
 @Slf4j
 @Component
@@ -32,16 +33,12 @@ import java.util.UUID;
 public class OrderEventListener {
 
     private final InventoryService inventoryService;
-    private final KafkaTemplate<String, InventoryReservedEvent> inventoryReservedEventKafkaTemplate;
-    private final KafkaTemplate<String, InventoryReservationFailedEvent> inventoryReservationFailedEventKafkaTemplate;
-    private final KafkaTemplate<String, InventoryReleasedEvent> inventoryReleasedEventKafkaTemplate;
-
-    @Value("${kafka.topics.inventory-events}")
-    private String inventoryEventsTopic;
+    private final OutboxService outboxService;
+    private final ObjectMapper objectMapper;
 
     /**
      * 주문 생성 이벤트 처리
-     * 재고를 예약하고 결과 이벤트를 발행
+     * 재고를 예약하고 결과 이벤트를 Outbox에 저장
      */
     @KafkaListener(
             topics = "${kafka.topics.order-events}",
@@ -79,7 +76,7 @@ public class OrderEventListener {
                         item.getProductCode(), item.getQuantity());
             }
 
-            // 재고 예약 성공 이벤트 발행
+            // 재고 예약 성공 이벤트를 Outbox에 저장
             InventoryReservedEvent reservedEvent = InventoryReservedEvent.builder()
                     .eventId(UUID.randomUUID().toString())
                     .orderId(event.getOrderId())
@@ -88,20 +85,20 @@ public class OrderEventListener {
                     .reservedAt(LocalDateTime.now())
                     .build();
 
-            inventoryReservedEventKafkaTemplate.send(inventoryEventsTopic, reservedEvent)
-                    .whenComplete((result, ex) -> {
-                        if (ex == null) {
-                            log.info("재고 예약 성공 이벤트 발행 완료: orderId={}", event.getOrderId());
-                        } else {
-                            log.error("재고 예약 성공 이벤트 발행 실패: orderId={}", event.getOrderId(), ex);
-                        }
-                    });
+            String payload = objectMapper.writeValueAsString(reservedEvent);
+            outboxService.saveOutbox(
+                    "Inventory",
+                    event.getOrderId(),
+                    "InventoryReservedEvent",
+                    payload
+            );
+            log.info("재고 예약 성공 이벤트 Outbox 저장 완료: orderId={}", event.getOrderId());
 
         } catch (InsufficientStockException e) {
             log.warn("재고 부족으로 주문 실패: orderId={}, productCode={}, requestedQty={}, availableQty={}",
                     event.getOrderId(), e.getProductCode(), e.getRequestedQuantity(), e.getAvailableQuantity());
 
-            // 재고 예약 실패 이벤트 발행
+            // 재고 예약 실패 이벤트를 Outbox에 저장
             InventoryReservationFailedEvent failedEvent = InventoryReservationFailedEvent.builder()
                     .eventId(UUID.randomUUID().toString())
                     .orderId(event.getOrderId())
@@ -113,19 +110,23 @@ public class OrderEventListener {
                     .failedAt(LocalDateTime.now())
                     .build();
 
-            inventoryReservationFailedEventKafkaTemplate.send(inventoryEventsTopic, failedEvent)
-                    .whenComplete((result, ex) -> {
-                        if (ex == null) {
-                            log.info("재고 예약 실패 이벤트 발행 완료: orderId={}", event.getOrderId());
-                        } else {
-                            log.error("재고 예약 실패 이벤트 발행 실패: orderId={}", event.getOrderId(), ex);
-                        }
-                    });
+            try {
+                String payload = objectMapper.writeValueAsString(failedEvent);
+                outboxService.saveOutbox(
+                        "Inventory",
+                        event.getOrderId(),
+                        "InventoryReservationFailedEvent",
+                        payload
+                );
+                log.info("재고 예약 실패 이벤트 Outbox 저장 완료: orderId={}", event.getOrderId());
+            } catch (Exception ex) {
+                log.error("재고 예약 실패 이벤트 Outbox 저장 실패: orderId={}", event.getOrderId(), ex);
+            }
 
         } catch (Exception e) {
             log.error("주문 생성 이벤트 처리 중 오류 발생: orderId={}", event.getOrderId(), e);
 
-            // 일반 오류도 실패 이벤트로 발행
+            // 일반 오류도 실패 이벤트로 Outbox에 저장
             InventoryReservationFailedEvent failedEvent = InventoryReservationFailedEvent.builder()
                     .eventId(UUID.randomUUID().toString())
                     .orderId(event.getOrderId())
@@ -134,13 +135,23 @@ public class OrderEventListener {
                     .failedAt(LocalDateTime.now())
                     .build();
 
-            inventoryReservationFailedEventKafkaTemplate.send(inventoryEventsTopic, failedEvent);
+            try {
+                String payload = objectMapper.writeValueAsString(failedEvent);
+                outboxService.saveOutbox(
+                        "Inventory",
+                        event.getOrderId(),
+                        "InventoryReservationFailedEvent",
+                        payload
+                );
+            } catch (Exception ex) {
+                log.error("재고 예약 실패 이벤트 Outbox 저장 실패: orderId={}", event.getOrderId(), ex);
+            }
         }
     }
 
     /**
      * 주문 취소 이벤트 처리
-     * 예약된 재고를 해제하고 결과 이벤트를 발행
+     * 예약된 재고를 해제하고 결과 이벤트를 Outbox에 저장
      */
     @KafkaListener(
             topics = "${kafka.topics.order-events}",
@@ -178,7 +189,7 @@ public class OrderEventListener {
                         item.getProductCode(), item.getQuantity());
             }
 
-            // 재고 해제 완료 이벤트 발행
+            // 재고 해제 완료 이벤트를 Outbox에 저장
             InventoryReleasedEvent releasedEvent = InventoryReleasedEvent.builder()
                     .eventId(UUID.randomUUID().toString())
                     .orderId(event.getOrderId())
@@ -187,14 +198,14 @@ public class OrderEventListener {
                     .releasedAt(LocalDateTime.now())
                     .build();
 
-            inventoryReleasedEventKafkaTemplate.send(inventoryEventsTopic, releasedEvent)
-                    .whenComplete((result, ex) -> {
-                        if (ex == null) {
-                            log.info("재고 해제 완료 이벤트 발행 완료: orderId={}", event.getOrderId());
-                        } else {
-                            log.error("재고 해제 완료 이벤트 발행 실패: orderId={}", event.getOrderId(), ex);
-                        }
-                    });
+            String payload = objectMapper.writeValueAsString(releasedEvent);
+            outboxService.saveOutbox(
+                    "Inventory",
+                    event.getOrderId(),
+                    "InventoryReleasedEvent",
+                    payload
+            );
+            log.info("재고 해제 완료 이벤트 Outbox 저장 완료: orderId={}", event.getOrderId());
 
         } catch (Exception e) {
             log.error("주문 취소 이벤트 처리 중 오류 발생: orderId={}", event.getOrderId(), e);

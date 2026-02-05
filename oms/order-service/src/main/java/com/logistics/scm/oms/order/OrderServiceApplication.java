@@ -3,6 +3,7 @@ package com.logistics.scm.oms.order;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Order Service Application
@@ -13,6 +14,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * - 주문 취소/변경
  * - 배송지 관리
  * - 다채널 주문 통합
+ * - Outbox Pattern을 통한 이벤트 발행
  *
  * Port: 8081
  * Database: PostgreSQL (order_db, Port: 5432)
@@ -20,6 +22,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * @author c.h.jo
  * @since 2026-01-27
  */
+@EnableScheduling
 @EnableDiscoveryClient
 @SpringBootApplication
 public class OrderServiceApplication {

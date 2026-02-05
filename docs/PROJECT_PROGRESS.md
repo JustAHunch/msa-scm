@@ -413,23 +413,23 @@ Order Service와 Inventory Service 간 Kafka 이벤트 기반 통신을 통한:
   - [ ] 재고 부족 시나리오 테스트
   - [ ] 주문 취소 시나리오 테스트
 
-### Phase 9-5: Outbox Pattern 적용 (선택)
+### Phase 9-5: Outbox Pattern 적용 ✅
 **작업 기간**: 1-2일  
 **목적**: 이벤트 발행 신뢰성 보장
 
-- [ ] **Outbox Entity 및 Repository**
-  - [ ] Order Service - Outbox Entity
-  - [ ] Order Service - OutboxRepository
-  - [ ] Inventory Service - Outbox Entity
-  - [ ] Inventory Service - OutboxRepository
+- [x] **Outbox Entity 및 Repository**
+  - [x] Order Service - Outbox Entity
+  - [x] Order Service - OutboxRepository
+  - [x] Inventory Service - Outbox Entity
+  - [x] Inventory Service - OutboxRepository
   
-- [ ] **Outbox 이벤트 저장 로직**
-  - [ ] DB 트랜잭션 내에서 Outbox 테이블에 이벤트 저장
+- [x] **Outbox 이벤트 저장 로직**
+  - [x] DB 트랜잭션 내에서 Outbox 테이블에 이벤트 저장
   
-- [ ] **Scheduler/Polling 구현**
-  - [ ] OutboxEventPublisher (주기적 폴링)
-  - [ ] 미발행 이벤트를 Kafka로 발행
-  - [ ] 발행 완료 후 상태 업데이트
+- [x] **Scheduler/Polling 구현**
+  - [x] OutboxEventPublisher (주기적 폴링)
+  - [x] 미발행 이벤트를 Kafka로 발행
+  - [x] 발행 완료 후 상태 업데이트
   
 - [ ] **테스트**
   - [ ] Kafka 장애 시나리오 테스트
@@ -782,7 +782,30 @@ inventory-service/
   - CommandLineRunner를 활용한 초기 데이터 로딩 패턴
 - **다음 목표**: Repository 및 Service 레이어 구현, 전체 시스템 통합 테스트
 
-### 2026-02-05 (8차: Order Service 공통 응답 규격 및 REST API 구현 완료)
+### 2026-02-05 (9차: Outbox Pattern 구현 완료)
+- **완료**:
+  - Transactional Outbox Pattern 완전 구현
+    - Order Service: Outbox Entity, OutboxRepository, OutboxService, OutboxEventPublisher
+    - Inventory Service: Outbox Entity, OutboxRepository, OutboxService, OutboxEventPublisher
+  - Order Service Service 레이어에 Outbox 패턴 적용
+    - OrderServiceImpl: Kafka 직접 발행 → Outbox 테이블 저장으로 변경
+    - 비즈니스 데이터(Order)와 이벤트(Outbox)를 동일 트랜잭션으로 처리
+  - Inventory Service Event Listener에 Outbox 패턴 적용
+    - OrderEventListener: Kafka 직접 발행 → Outbox 테이블 저장으로 변경
+    - 재고 변경과 이벤트를 동일 트랜잭션으로 처리
+  - OutboxEventPublisher 스케줄러 구현
+    - 발행 대기 이벤트 폴링 (5초 주기)
+    - 발행 실패 이벤트 재시도 (30초 주기, 최대 3회)
+    - 발행 완료 이벤트 정리 (매일 새벽 2시, 7일 이상 지난 이벤트)
+  - Application 클래스에 @EnableScheduling 추가
+- **배운 점**:
+  - Transactional Outbox Pattern의 핵심은 비즈니스 데이터와 이벤트를 동일 트랜잭션으로 처리하여 원자성 보장
+  - Kafka 발행 실패 시에도 Outbox 테이블에 이벤트가 남아있어 재발행 가능
+  - Scheduler를 통한 주기적 폴링으로 Kafka 장애 복구 후 자동 재발행
+  - OutboxStatus (PENDING → PUBLISHED / FAILED) 상태 관리로 멱등성 보장
+  - 최대 재시도 횟수 (3회) 및 재시도 간격 (1분) 설정으로 무한 루프 방지
+  - 발행 완료된 오래된 이벤트는 정기적으로 정리하여 테이블 크기 관리
+- **다음 목표**: Kafka 장애 시나리오 테스트, 전체 시스템 통합 테스트
 - **완료**:
   - Order Service 공통 예외 처리 인프라 구축
     - BaseException, BusinessException, EntityNotFoundException, InvalidInputException, DuplicateEntityException, UnauthorizedException
@@ -825,6 +848,6 @@ inventory-service/
 
 ---
 
-**마지막 업데이트**: 2026-02-05 (Order Service 공통 응답 규격 및 REST API 구현 완료)
-**업데이트 담당**: SCM Team
-**총 Entity/Document 수**: 25개 (Order: 4, Inventory: 2, Warehouse: 9, Delivery: 5, Notification: 2, Analytics: 3, Common: 2)
+**마지막 업데이트**: 2026-02-05 (Outbox Pattern 구현 완료)
+**업데이트 담당**: c.h.jo
+**총 Entity/Document 수**: 27개 (Order: 5 (Outbox 포함), Inventory: 3 (Outbox 포함), Warehouse: 9, Delivery: 5, Notification: 2, Analytics: 3, Common: 2)

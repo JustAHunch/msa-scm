@@ -1,5 +1,6 @@
 package com.logistics.scm.oms.order.domain.order.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logistics.scm.oms.order.domain.order.entity.Order;
 import com.logistics.scm.oms.order.domain.order.entity.OrderItem;
 import com.logistics.scm.oms.order.domain.order.exception.InvalidOrderStatusException;
@@ -7,10 +8,9 @@ import com.logistics.scm.oms.order.domain.order.exception.OrderNotFoundException
 import com.logistics.scm.oms.order.event.order.OrderCancelledEvent;
 import com.logistics.scm.oms.order.event.order.OrderCreatedEvent;
 import com.logistics.scm.oms.order.domain.order.repository.OrderRepository;
+import com.logistics.scm.oms.order.event.outbox.service.OutboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +21,10 @@ import java.util.stream.Collectors;
 
 /**
  * 주문 서비스 구현체
+ * 
+ * Outbox Pattern 적용:
+ * - 비즈니스 데이터(Order)와 이벤트(Outbox)를 동일 트랜잭션으로 저장
+ * - Kafka 발행은 별도 Scheduler가 Outbox 테이블을 폴링하여 처리
  */
 @Slf4j
 @Service
@@ -28,22 +32,19 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
-    private final KafkaTemplate<String, OrderCreatedEvent> orderCreatedEventKafkaTemplate;
-    private final KafkaTemplate<String, OrderCancelledEvent> orderCancelledEventKafkaTemplate;
-
-    @Value("${kafka.topics.order-events}")
-    private String orderEventsTopic;
+    private final OutboxService outboxService;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
     public Order createOrder(Order order) {
         log.info("주문 생성 시작: orderNumber={}", order.getOrderNumber());
 
-        // 주문 저장
+        // 1. 주문 저장
         order.setOrderDate(LocalDateTime.now());
         Order savedOrder = orderRepository.save(order);
 
-        // OrderCreatedEvent 발행
+        // 2. OrderCreatedEvent를 Outbox 테이블에 저장
         OrderCreatedEvent event = OrderCreatedEvent.builder()
                 .eventId(UUID.randomUUID().toString())
                 .orderId(savedOrder.getOrderId().toString())
@@ -54,16 +55,19 @@ public class OrderServiceImpl implements OrderService {
                 .createdAt(savedOrder.getOrderDate())
                 .build();
 
-        orderCreatedEventKafkaTemplate.send(orderEventsTopic, event)
-                .whenComplete((result, ex) -> {
-                    if (ex == null) {
-                        log.info("주문 생성 이벤트 발행 완료: orderId={}, orderNumber={}", 
-                                savedOrder.getOrderId(), savedOrder.getOrderNumber());
-                    } else {
-                        log.error("주문 생성 이벤트 발행 실패: orderId={}", 
-                                savedOrder.getOrderId(), ex);
-                    }
-                });
+        try {
+            String payload = objectMapper.writeValueAsString(event);
+            outboxService.saveOutbox(
+                    "Order",
+                    savedOrder.getOrderId().toString(),
+                    "OrderCreatedEvent",
+                    payload
+            );
+            log.info("주문 생성 이벤트 Outbox 저장 완료: orderId={}", savedOrder.getOrderId());
+        } catch (Exception e) {
+            log.error("주문 생성 이벤트 Outbox 저장 실패: orderId={}", savedOrder.getOrderId(), e);
+            throw new RuntimeException("이벤트 저장 실패", e);
+        }
 
         log.info("주문 생성 완료: orderId={}, status={}", 
                 savedOrder.getOrderId(), savedOrder.getOrderStatus());
@@ -105,11 +109,11 @@ public class OrderServiceImpl implements OrderService {
             throw new InvalidOrderStatusException(orderId, order.getOrderStatus(), "주문 취소");
         }
 
-        // 주문 상태를 CANCELLED로 변경
+        // 1. 주문 상태를 CANCELLED로 변경
         order.cancel();
         Order cancelledOrder = orderRepository.save(order);
 
-        // OrderCancelledEvent 발행 (재고 원복 위해)
+        // 2. OrderCancelledEvent를 Outbox 테이블에 저장
         OrderCancelledEvent event = OrderCancelledEvent.builder()
                 .eventId(UUID.randomUUID().toString())
                 .orderId(cancelledOrder.getOrderId().toString())
@@ -119,14 +123,19 @@ public class OrderServiceImpl implements OrderService {
                 .cancelledAt(LocalDateTime.now())
                 .build();
 
-        orderCancelledEventKafkaTemplate.send(orderEventsTopic, event)
-                .whenComplete((result, ex) -> {
-                    if (ex == null) {
-                        log.info("주문 취소 이벤트 발행 완료: orderId={}", cancelledOrder.getOrderId());
-                    } else {
-                        log.error("주문 취소 이벤트 발행 실패: orderId={}", cancelledOrder.getOrderId(), ex);
-                    }
-                });
+        try {
+            String payload = objectMapper.writeValueAsString(event);
+            outboxService.saveOutbox(
+                    "Order",
+                    cancelledOrder.getOrderId().toString(),
+                    "OrderCancelledEvent",
+                    payload
+            );
+            log.info("주문 취소 이벤트 Outbox 저장 완료: orderId={}", cancelledOrder.getOrderId());
+        } catch (Exception e) {
+            log.error("주문 취소 이벤트 Outbox 저장 실패: orderId={}", cancelledOrder.getOrderId(), e);
+            throw new RuntimeException("이벤트 저장 실패", e);
+        }
 
         log.info("주문 취소 완료: orderId={}, status={}", 
                 cancelledOrder.getOrderId(), cancelledOrder.getOrderStatus());
