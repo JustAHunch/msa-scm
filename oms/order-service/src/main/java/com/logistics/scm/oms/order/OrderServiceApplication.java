@@ -18,7 +18,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * Database: PostgreSQL (order_db, Port: 5432)
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @EnableDiscoveryClient
 @SpringBootApplication

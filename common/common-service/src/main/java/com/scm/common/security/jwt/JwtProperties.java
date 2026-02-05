@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  * application.yml의 jwt.* 속성을 바인딩합니다.
  * 
  * @author c.h.jo
- * @since 2025-01-28
+ * @since 2026-01-28
  */
 @Getter
 @Setter

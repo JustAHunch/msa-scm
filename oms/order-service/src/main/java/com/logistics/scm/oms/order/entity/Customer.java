@@ -17,7 +17,7 @@ import java.util.UUID;
  * 고객 정보를 관리합니다.
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Getter
 @Setter

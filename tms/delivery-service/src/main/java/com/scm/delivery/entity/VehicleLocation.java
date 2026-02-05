@@ -15,7 +15,7 @@ import java.util.UUID;
  * VehicleLocation Entity - 차량 위치 추적
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Getter
 @Setter

@@ -10,7 +10,7 @@ import lombok.Setter;
  * 토큰 검증 요청 DTO
  * 
  * @author c.h.jo
- * @since 2025-01-28
+ * @since 2026-01-28
  */
 @Getter
 @Setter

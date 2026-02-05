@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
  * Common Service에서 발급한 JWT 토큰을 검증합니다.
  * 
  * @author c.h.jo
- * @since 2025-01-28
+ * @since 2026-01-28
  */
 @Component
 public class JwtTokenProvider {

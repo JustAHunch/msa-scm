@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
  * JWT 토큰 발급 및 인증 처리를 담당합니다.
  * 
  * @author c.h.jo
- * @since 2025-01-28
+ * @since 2026-01-28
  */
 @Slf4j
 @Service

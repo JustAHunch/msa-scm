@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
  *       MSA 아키텍처의 일관성과 향후 확장성을 위해 UUID 전략을 사용합니다.
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Getter
 @Setter

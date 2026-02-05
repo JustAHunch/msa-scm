@@ -12,7 +12,7 @@ import java.util.UUID;
  * PickingList Entity - 피킹 리스트
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Entity
 @Table(name = "PICKING_LIST_TB", indexes = {

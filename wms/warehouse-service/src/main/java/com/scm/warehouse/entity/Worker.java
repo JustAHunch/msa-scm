@@ -9,7 +9,7 @@ import java.util.UUID;
  * Worker Entity - 창고 작업자
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Entity
 @Table(name = "WORKER_TB", indexes = {

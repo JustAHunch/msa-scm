@@ -19,7 +19,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * Database: PostgreSQL (inventory_db, Port: 5433)
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @EnableCaching
 @EnableDiscoveryClient

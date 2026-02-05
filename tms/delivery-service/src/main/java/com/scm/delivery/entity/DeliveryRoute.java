@@ -16,7 +16,7 @@ import java.util.UUID;
  * DeliveryRoute Entity - 배송 경로
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Getter
 @Setter

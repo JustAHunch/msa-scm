@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
  * - 생성자/수정자 자동 관리 (AuditorAware 구현 필요)
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Getter
 @Setter

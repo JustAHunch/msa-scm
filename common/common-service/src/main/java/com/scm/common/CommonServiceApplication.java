@@ -20,7 +20,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
  * Database: PostgreSQL (common_db, Port: 5436)
  *
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @SpringBootApplication
 @EnableDiscoveryClient

@@ -28,7 +28,7 @@ import java.util.UUID;
  * - 시스템 귀책: 시스템 오류로 인한 반송
  * 
  * @author c.h.jo
- * @since 2025-01-28
+ * @since 2026-01-28
  */
 @Getter
 @Setter

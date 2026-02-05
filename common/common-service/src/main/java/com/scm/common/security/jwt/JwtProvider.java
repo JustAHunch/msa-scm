@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * - 토큰에서 사용자 정보 추출
  * 
  * @author c.h.jo
- * @since 2025-01-28
+ * @since 2026-01-28
  */
 @Slf4j
 @Component

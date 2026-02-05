@@ -23,7 +23,7 @@ import java.util.Optional;
  * - X-User-Role: 사용자 권한
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Configuration
 public class AuditorAwareConfig {

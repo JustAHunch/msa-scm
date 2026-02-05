@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
  * - /api/auth/** (인증 API)
  * 
  * @author c.h.jo
- * @since 2025-01-28
+ * @since 2026-01-28
  */
 @Component
 public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {

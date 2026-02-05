@@ -13,7 +13,7 @@ import java.util.UUID;
  * PickingItem Entity - 피킹 항목
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Getter
 @Setter

@@ -12,7 +12,7 @@ import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
  * Port: 8761
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @EnableEurekaServer
 @SpringBootApplication

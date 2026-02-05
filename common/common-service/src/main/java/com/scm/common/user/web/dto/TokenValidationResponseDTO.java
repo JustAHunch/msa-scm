@@ -11,7 +11,7 @@ import java.util.Date;
  * 토큰 검증 응답 DTO
  * 
  * @author c.h.jo
- * @since 2025-01-28
+  * @since 2026-01-28
  */
 @Getter
 @Builder

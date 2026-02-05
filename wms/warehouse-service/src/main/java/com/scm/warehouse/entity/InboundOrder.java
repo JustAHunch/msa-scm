@@ -17,7 +17,7 @@ import java.util.UUID;
  * InboundOrder Entity - 입고 주문
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Getter
 @Setter

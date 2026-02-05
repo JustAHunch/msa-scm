@@ -13,7 +13,7 @@ import java.util.UUID;
  * 창고 정보를 관리합니다.
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @Entity
 @Table(name = "WAREHOUSE_TB", indexes = {

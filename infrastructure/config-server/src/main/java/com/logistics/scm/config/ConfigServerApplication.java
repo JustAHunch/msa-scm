@@ -16,7 +16,7 @@ import org.springframework.cloud.config.server.EnableConfigServer;
  * Port: 8888
  * 
  * @author c.h.jo
- * @since 2025-01-27
+ * @since 2026-01-27
  */
 @EnableConfigServer
 @EnableDiscoveryClient
