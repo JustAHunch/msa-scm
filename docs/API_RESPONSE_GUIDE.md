@@ -576,7 +576,7 @@ public ResponseEntity<ApiResponse<OrderResponseDTO>> getOrder(@PathVariable UUID
   "success": true,
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "orderNumber": "ORD-20260205-0001",
+    "orderNumber": "ORD-20260205-000000001",
     "status": "CREATED",
     "totalAmount": 150000.00
   },
@@ -605,7 +605,7 @@ public ResponseEntity<ApiResponse<OrderResponseDTO>> createOrder(
   "success": true,
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "orderNumber": "ORD-20260205-0001"
+    "orderNumber": "ORD-20260205-000000001"
   },
   "message": "주문이 성공적으로 생성되었습니다.",
   "timestamp": "2026-02-05T14:30:00"

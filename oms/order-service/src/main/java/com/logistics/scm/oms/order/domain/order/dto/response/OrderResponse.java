@@ -25,7 +25,7 @@ public class OrderResponse {
     @Schema(description = "주문 ID", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID id;
 
-    @Schema(description = "주문 번호", example = "ORD-20260205-0001")
+    @Schema(description = "주문 번호", example = "ORD-20260205-000000001")
     private String orderNumber;
 
     @Schema(description = "고객 ID", example = "c1234567-1234-1234-1234-123456789012")

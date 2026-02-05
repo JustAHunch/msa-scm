@@ -161,7 +161,7 @@ public class ApiResponse<T> {
   "success": true,
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "orderNumber": "ORD-20260205-0001",
+    "orderNumber": "ORD-20260205-000000001",
     "status": "CREATED"
   },
   "timestamp": "2026-02-05T14:30:00"
@@ -871,7 +871,7 @@ oms/order-service/src/main/java/com/logistics/scm/oms/order/
   "success": true,
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "orderNumber": "ORD-20260205-0001",
+    "orderNumber": "ORD-20260205-000000001",
     "customerId": "c1234567-1234-1234-1234-123456789012",
     "status": "CREATED",
     "totalAmount": 150000.00,
