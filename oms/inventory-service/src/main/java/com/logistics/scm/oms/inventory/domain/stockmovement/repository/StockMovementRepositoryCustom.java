@@ -1,7 +1,7 @@
-package com.logistics.scm.oms.inventory.repository;
+package com.logistics.scm.oms.inventory.domain.stockmovement.repository;
 
-import com.logistics.scm.oms.inventory.entity.StockMovement;
-import com.logistics.scm.oms.inventory.entity.StockMovementType;
+import com.logistics.scm.oms.inventory.domain.stockmovement.entity.StockMovement;
+import com.logistics.scm.oms.inventory.domain.stockmovement.entity.StockMovementType;
 
 import java.time.LocalDateTime;
 import java.util.List;

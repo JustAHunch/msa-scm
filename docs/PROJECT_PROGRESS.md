@@ -108,7 +108,11 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 - [x] REST API 구현 (OrderResource, CustomerResource)
 - [x] Swagger/OpenAPI 문서화 (@Schema 어노테이션 추가)
 - [x] Postman Collection 및 Environment 생성
-- [ ] DTO 정의
+- [x] DTO 정의 (OrderCreateRequest, OrderCancelRequestDTO, OrderResponse, OrderItemResponse, ApiResponse, ErrorResponse)
+- [x] 공통 예외 처리 인프라 (BaseException, BusinessException, EntityNotFoundException 등)
+- [x] ErrorCode Enum (O001~O010)
+- [x] GlobalExceptionHandler
+- [x] 도메인 예외 (OrderNotFoundException, OrderCancellationException, InvalidOrderStatusException)
 - [ ] 비즈니스 로직 확장 (주문 상태 관리, CS 처리)
 - [ ] 테스트 코드 작성
 
@@ -778,8 +782,49 @@ inventory-service/
   - CommandLineRunner를 활용한 초기 데이터 로딩 패턴
 - **다음 목표**: Repository 및 Service 레이어 구현, 전체 시스템 통합 테스트
 
+### 2026-02-05 (8차: Order Service 공통 응답 규격 및 REST API 구현 완료)
+- **완료**:
+  - Order Service 공통 예외 처리 인프라 구축
+    - BaseException, BusinessException, EntityNotFoundException, InvalidInputException, DuplicateEntityException, UnauthorizedException
+    - ErrorCode Enum (공통: C001~C006, 주문: O001~O010)
+    - GlobalExceptionHandler (Validation, IllegalArgument, BindException 등 처리)
+  - 도메인 예외 클래스 작성
+    - OrderNotFoundException: 주문 조회 실패
+    - OrderCancellationException: 주문 취소 실패
+    - InvalidOrderStatusException: 유효하지 않은 주문 상태
+  - DTO 클래스 완전 구현
+    - ApiResponse<T>: 공통 응답 래퍼 (success 메서드 4종)
+    - ErrorResponse: 에러 응답 DTO (FieldError 포함)
+    - OrderResponse: 주문 응답 (Entity → DTO 변환 메서드)
+    - OrderItemResponse: 주문 항목 응답 (Entity → DTO 변환 메서드)
+    - OrderCancelRequestDTO: 주문 취소 요청
+  - OrderResource REST API 완전 구현
+    - GET /api/v1/orders/{id}: 주문 조회
+    - POST /api/v1/orders: 주문 생성
+    - DELETE /api/v1/orders/{id}: 주문 취소
+    - ApiResponse<T> 래퍼 적용
+    - Swagger 문서화 완료
+  - Order Entity 개선
+    - from() 정적 메서드 추가 (DTO → Entity 변환)
+    - getId(), getStatus(), getItems() getter 별칭
+    - generateOrderNumber() 주문번호 생성 메서드
+  - OrderItem Entity 개선
+    - getId(), getSubtotal() getter 별칭
+    - calculateSubtotal() 메서드 추가
+  - OrderServiceImpl 예외 처리 개선
+    - IllegalArgumentException → OrderNotFoundException
+    - IllegalStateException → InvalidOrderStatusException
+- **배운 점**:
+  - Inventory Service의 예외 처리 패턴을 Order Service에 성공적으로 적용
+  - ErrorCode Enum의 서비스별 prefix 관리 (O001~O999)
+  - ApiResponse<T> 제네릭 래퍼를 통한 일관된 성공 응답 형식
+  - GlobalExceptionHandler의 중앙 집중식 예외 처리
+  - Entity ↔ DTO 변환 정적 메서드 패턴 (from() 메서드)
+  - Swagger @Operation, @ApiResponse 어노테이션을 통한 API 문서화
+- **다음 목표**: Inventory Service Repository 및 Service 레이어 구현, Kafka 이벤트 인프라 구축
+
 ---
 
-**마지막 업데이트**: 2026-02-05 (JWT 인증 및 로그인 기능 구현 완료)
+**마지막 업데이트**: 2026-02-05 (Order Service 공통 응답 규격 및 REST API 구현 완료)
 **업데이트 담당**: SCM Team
 **총 Entity/Document 수**: 25개 (Order: 4, Inventory: 2, Warehouse: 9, Delivery: 5, Notification: 2, Analytics: 3, Common: 2)

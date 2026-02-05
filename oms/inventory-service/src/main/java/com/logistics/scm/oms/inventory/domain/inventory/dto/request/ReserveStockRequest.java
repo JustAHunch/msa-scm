@@ -1,4 +1,4 @@
-package com.logistics.scm.oms.inventory.dto.request;
+package com.logistics.scm.oms.inventory.domain.inventory.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

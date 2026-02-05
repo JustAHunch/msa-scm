@@ -1,9 +1,9 @@
-package com.logistics.scm.oms.inventory.repository;
+package com.logistics.scm.oms.inventory.domain.stockmovement.repository;
 
 import com.logistics.scm.oms.inventory.entity.QInventory;
 import com.logistics.scm.oms.inventory.entity.QStockMovement;
-import com.logistics.scm.oms.inventory.entity.StockMovement;
-import com.logistics.scm.oms.inventory.entity.StockMovementType;
+import com.logistics.scm.oms.inventory.domain.stockmovement.entity.StockMovement;
+import com.logistics.scm.oms.inventory.domain.stockmovement.entity.StockMovementType;
 import com.querydsl.core.types.Ops;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;

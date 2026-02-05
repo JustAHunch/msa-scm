@@ -1,4 +1,4 @@
-package com.logistics.scm.oms.inventory.exception;
+package com.logistics.scm.oms.inventory.domain.inventory.exception;
 
 import com.logistics.scm.oms.inventory.common.exception.BusinessException;
 import com.logistics.scm.oms.inventory.common.exception.ErrorCode;

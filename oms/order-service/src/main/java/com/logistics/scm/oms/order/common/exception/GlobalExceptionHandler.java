@@ -1,6 +1,6 @@
 package com.logistics.scm.oms.order.common.exception;
 
-import com.logistics.scm.oms.order.domain.order.dto.ErrorResponse;
+import com.logistics.scm.oms.order.common.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

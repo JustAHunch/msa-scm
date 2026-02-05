@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrderCancelRequestDTO {
+public class OrderCancelRequest {
 
     @Schema(description = "취소 사유", example = "고객 변심", required = true)
     @NotBlank(message = "취소 사유는 필수입니다")

@@ -131,6 +131,7 @@ cd oms/order-service && ../../gradlew bootRun
 - [시작 가이드](QUICKSTART.md) - 빠르게 시작하기
 - [아키텍처 문서](docs/ARCHITECTURE.md) - 시스템 아키텍처 상세
 - [코딩 컨벤션](docs/CODING_CONVENTION.md) - 개발 규칙
+- [API 응답 규격 가이드](docs/API_RESPONSE_GUIDE.md) - 공통 응답 및 예외 처리 ⭐
 - [커밋 컨벤션](docs/COMMIT_CONVENTION.md) - 커밋 메시지 규칙
 - [설정 가이드](docs/CONFIGURATION.md) - 환경 설정
 - [프로젝트 진행 상황](docs/PROJECT_PROGRESS.md) - 개발 진행 현황

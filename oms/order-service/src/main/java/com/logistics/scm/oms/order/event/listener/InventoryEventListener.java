@@ -3,7 +3,7 @@ package com.logistics.scm.oms.order.event.listener;
 import com.logistics.scm.oms.order.event.inventory.InventoryReleasedEvent;
 import com.logistics.scm.oms.order.event.inventory.InventoryReservationFailedEvent;
 import com.logistics.scm.oms.order.event.inventory.InventoryReservedEvent;
-import com.logistics.scm.oms.order.service.OrderService;
+import com.logistics.scm.oms.order.domain.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;

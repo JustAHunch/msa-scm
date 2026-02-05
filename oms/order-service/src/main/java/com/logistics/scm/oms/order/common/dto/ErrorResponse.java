@@ -1,4 +1,4 @@
-package com.logistics.scm.oms.order.domain.order.dto;
+package com.logistics.scm.oms.order.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;

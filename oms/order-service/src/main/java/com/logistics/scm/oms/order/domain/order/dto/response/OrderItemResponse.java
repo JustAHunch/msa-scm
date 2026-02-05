@@ -17,7 +17,7 @@ import java.util.UUID;
 @Getter
 @Builder
 @Schema(description = "주문 항목 정보")
-public class OrderItemResponseDTO {
+public class OrderItemResponse {
 
     @Schema(description = "주문 항목 ID", example = "550e8400-e29b-41d4-a716-446655440001")
     private UUID id;
@@ -37,8 +37,8 @@ public class OrderItemResponseDTO {
     /**
      * Entity를 DTO로 변환
      */
-    public static OrderItemResponseDTO from(OrderItem item) {
-        return OrderItemResponseDTO.builder()
+    public static OrderItemResponse from(OrderItem item) {
+        return OrderItemResponse.builder()
                 .id(item.getId())
                 .productCode(item.getProductCode())
                 .quantity(item.getQuantity())

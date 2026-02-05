@@ -2,6 +2,8 @@ package com.logistics.scm.oms.order.domain.order.service;
 
 import com.logistics.scm.oms.order.domain.order.entity.Order;
 import com.logistics.scm.oms.order.domain.order.entity.OrderItem;
+import com.logistics.scm.oms.order.domain.order.exception.InvalidOrderStatusException;
+import com.logistics.scm.oms.order.domain.order.exception.OrderNotFoundException;
 import com.logistics.scm.oms.order.event.OrderCancelledEvent;
 import com.logistics.scm.oms.order.event.OrderCreatedEvent;
 import com.logistics.scm.oms.order.domain.order.repository.OrderRepository;
@@ -75,7 +77,7 @@ public class OrderServiceImpl implements OrderService {
         log.info("주문 확정 시작: orderId={}", orderId);
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
 
         // 주문 상태를 CONFIRMED로 변경
         order.confirm();
@@ -93,14 +95,14 @@ public class OrderServiceImpl implements OrderService {
         log.info("주문 취소 시작 (사용자 요청): orderId={}, reason={}", orderId, cancelReason);
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
 
         // 주문 취소 가능 여부 확인
         if (order.getOrderStatus() == Order.OrderStatus.CANCELLED) {
-            throw new IllegalStateException("이미 취소된 주문입니다");
+            throw new InvalidOrderStatusException(orderId, order.getOrderStatus(), "주문 취소");
         }
         if (order.getOrderStatus() == Order.OrderStatus.DELIVERED) {
-            throw new IllegalStateException("배송 완료된 주문은 취소할 수 없습니다");
+            throw new InvalidOrderStatusException(orderId, order.getOrderStatus(), "주문 취소");
         }
 
         // 주문 상태를 CANCELLED로 변경
@@ -138,7 +140,7 @@ public class OrderServiceImpl implements OrderService {
         log.warn("주문 취소 시작 (재고 부족): orderId={}, reason={}", orderId, reason);
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
 
         // 주문 상태를 CANCELLED로 변경
         order.cancel();
@@ -156,7 +158,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public Order loadOrderById(UUID orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
     }
 
     /**

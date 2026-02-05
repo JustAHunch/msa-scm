@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Getter
 @Builder
 @Schema(description = "주문 정보 응답")
-public class OrderResponseDTO {
+public class OrderResponse {
 
     @Schema(description = "주문 ID", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID id;
@@ -38,7 +38,7 @@ public class OrderResponseDTO {
     private BigDecimal totalAmount;
 
     @Schema(description = "주문 항목 목록")
-    private List<OrderItemResponseDTO> items;
+    private List<OrderItemResponse> items;
 
     @Schema(description = "생성 일시", example = "2026-02-05T10:30:00")
     private LocalDateTime createdAt;
@@ -55,15 +55,15 @@ public class OrderResponseDTO {
     /**
      * Entity를 DTO로 변환
      */
-    public static OrderResponseDTO from(Order order) {
-        return OrderResponseDTO.builder()
+    public static OrderResponse from(Order order) {
+        return OrderResponse.builder()
                 .id(order.getId())
                 .orderNumber(order.getOrderNumber())
                 .customerId(order.getCustomerId())
                 .status(order.getStatus())
                 .totalAmount(order.getTotalAmount())
                 .items(order.getItems().stream()
-                        .map(OrderItemResponseDTO::from)
+                        .map(OrderItemResponse::from)
                         .collect(Collectors.toList()))
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())

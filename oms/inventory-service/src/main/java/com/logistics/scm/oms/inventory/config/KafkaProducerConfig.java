@@ -1,8 +1,8 @@
 package com.logistics.scm.oms.inventory.config;
 
-import com.logistics.scm.oms.inventory.event.InventoryReleasedEvent;
-import com.logistics.scm.oms.inventory.event.InventoryReservationFailedEvent;
-import com.logistics.scm.oms.inventory.event.InventoryReservedEvent;
+import com.logistics.scm.oms.inventory.event.inventory.InventoryReleasedEvent;
+import com.logistics.scm.oms.inventory.event.inventory.InventoryReservationFailedEvent;
+import com.logistics.scm.oms.inventory.event.inventory.InventoryReservedEvent;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;

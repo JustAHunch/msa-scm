@@ -24,7 +24,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrderCreateRequestDTO {
+public class OrderCreateRequest {
 
     @Schema(description = "고객 ID", required = true, example = "c1234567-1234-1234-1234-123456789012")
     @NotNull(message = "고객 ID는 필수입니다")

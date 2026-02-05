@@ -1,4 +1,4 @@
-package com.logistics.scm.oms.inventory.dto.response;
+package com.logistics.scm.oms.inventory.domain.inventory.dto.response;
 
 import com.logistics.scm.oms.inventory.domain.inventory.entity.Inventory;
 import lombok.AllArgsConstructor;

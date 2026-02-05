@@ -1,4 +1,4 @@
-package com.logistics.scm.oms.inventory.entity;
+package com.logistics.scm.oms.inventory.domain.stockmovement.entity;
 
 /**
  * 재고 이동 유형

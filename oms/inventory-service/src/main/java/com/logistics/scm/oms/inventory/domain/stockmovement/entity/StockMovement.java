@@ -1,4 +1,4 @@
-package com.logistics.scm.oms.inventory.entity;
+package com.logistics.scm.oms.inventory.domain.stockmovement.entity;
 
 import com.logistics.scm.oms.inventory.common.BaseEntity;
 import jakarta.persistence.*;

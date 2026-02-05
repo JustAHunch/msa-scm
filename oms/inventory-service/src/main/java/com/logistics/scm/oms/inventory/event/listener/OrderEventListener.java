@@ -1,14 +1,14 @@
 package com.logistics.scm.oms.inventory.event.listener;
 
-import com.logistics.scm.oms.inventory.dto.request.ReleaseStockRequestDTO;
-import com.logistics.scm.oms.inventory.dto.request.ReserveStockRequestDTO;
-import com.logistics.scm.oms.inventory.event.InventoryReleasedEvent;
-import com.logistics.scm.oms.inventory.event.InventoryReservationFailedEvent;
-import com.logistics.scm.oms.inventory.event.InventoryReservedEvent;
+import com.logistics.scm.oms.inventory.domain.inventory.dto.request.ReleaseStockRequest;
+import com.logistics.scm.oms.inventory.domain.inventory.dto.request.ReserveStockRequest;
+import com.logistics.scm.oms.inventory.event.inventory.InventoryReleasedEvent;
+import com.logistics.scm.oms.inventory.event.inventory.InventoryReservationFailedEvent;
+import com.logistics.scm.oms.inventory.event.inventory.InventoryReservedEvent;
 import com.logistics.scm.oms.inventory.event.order.OrderCancelledEvent;
 import com.logistics.scm.oms.inventory.event.order.OrderCreatedEvent;
-import com.logistics.scm.oms.inventory.exception.InsufficientStockException;
-import com.logistics.scm.oms.inventory.service.InventoryService;
+import com.logistics.scm.oms.inventory.domain.inventory.exception.InsufficientStockException;
+import com.logistics.scm.oms.inventory.domain.inventory.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,7 +57,7 @@ public class OrderEventListener {
             List<InventoryReservedEvent.ReservationItem> reservations = new ArrayList<>();
 
             for (OrderCreatedEvent.OrderItemEvent item : event.getItems()) {
-                ReserveStockRequestDTO request = ReserveStockRequestDTO.builder()
+                ReserveStockRequest request = ReserveStockRequest.builder()
                         .warehouseId(UUID.fromString(item.getWarehouseId()))
                         .productCode(item.getProductCode())
                         .quantity(item.getQuantity())
@@ -156,7 +156,7 @@ public class OrderEventListener {
             List<InventoryReleasedEvent.ReleaseItem> releases = new ArrayList<>();
 
             for (OrderCancelledEvent.OrderItemEvent item : event.getItems()) {
-                ReleaseStockRequestDTO request = ReleaseStockRequestDTO.builder()
+                ReleaseStockRequest request = ReleaseStockRequest.builder()
                         .warehouseId(UUID.fromString(item.getWarehouseId()))
                         .productCode(item.getProductCode())
                         .quantity(item.getQuantity())

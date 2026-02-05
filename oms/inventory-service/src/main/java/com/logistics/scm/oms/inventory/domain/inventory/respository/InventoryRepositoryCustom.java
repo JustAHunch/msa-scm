@@ -1,6 +1,6 @@
-package com.logistics.scm.oms.inventory.repository;
+package com.logistics.scm.oms.inventory.domain.inventory.respository;
 
-import com.logistics.scm.oms.inventory.entity.Inventory;
+import com.logistics.scm.oms.inventory.domain.inventory.entity.Inventory;
 
 import java.util.List;
 import java.util.Optional;

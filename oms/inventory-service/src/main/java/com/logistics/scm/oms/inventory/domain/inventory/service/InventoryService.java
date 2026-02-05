@@ -1,4 +1,4 @@
-package com.logistics.scm.oms.inventory.service;
+package com.logistics.scm.oms.inventory.domain.inventory.service;
 
 import com.logistics.scm.oms.inventory.domain.inventory.dto.request.ReleaseStockRequest;
 import com.logistics.scm.oms.inventory.domain.inventory.dto.request.ReserveStockRequest;

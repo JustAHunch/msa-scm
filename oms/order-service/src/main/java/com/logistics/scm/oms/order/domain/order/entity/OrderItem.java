@@ -63,4 +63,19 @@ public class OrderItem extends BaseEntity {
             this.totalPrice = this.unitPrice.multiply(BigDecimal.valueOf(this.quantity));
         }
     }
+
+    public void calculateSubtotal() {
+        if (this.unitPrice != null && this.quantity != null) {
+            this.totalPrice = this.unitPrice.multiply(BigDecimal.valueOf(this.quantity));
+        }
+    }
+
+    // Getter 별칭 (DTO 변환 호환성)
+    public UUID getId() {
+        return this.orderItemId;
+    }
+
+    public BigDecimal getSubtotal() {
+        return this.totalPrice;
+    }
 }

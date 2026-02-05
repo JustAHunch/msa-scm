@@ -1,4 +1,4 @@
-package com.logistics.scm.oms.inventory.event;
+package com.logistics.scm.oms.inventory.event.inventory;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
