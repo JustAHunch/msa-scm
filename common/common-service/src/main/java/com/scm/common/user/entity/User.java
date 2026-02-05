@@ -95,6 +95,13 @@ public class User extends BaseEntity {
     private LocalDateTime lastLoginAt;
 
     /**
+     * 사용자 전체 이름 (실명)
+     * 선택 사항
+     */
+    @Column(name = "full_name", length = 100)
+    private String fullName;
+
+    /**
      * 비즈니스 로직: 로그인 성공 시 호출
      * lastLoginAt을 현재 시각으로 갱신
      */

@@ -21,7 +21,7 @@ import java.util.Collections;
  * Spring Security가 사용자 인증 시 사용하는 서비스입니다.
  * 
  * @author c.h.jo
- * @since 2025-01-28
+ * @since 2026-01-28
  */
 @Slf4j
 @Service
@@ -48,7 +48,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
 
         // 비활성화된 사용자 체크
-        if (!user.getEnabled()) {
+        if (!user.isEnabled()) {
             throw new RuntimeException("비활성화된 사용자입니다: " + username);
         }
 
@@ -67,9 +67,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .password(user.getPassword())
                 .authorities(getAuthorities(user))
                 .accountExpired(false)
-                .accountLocked(!user.getEnabled())
+                .accountLocked(!user.isEnabled())
                 .credentialsExpired(false)
-                .disabled(!user.getEnabled())
+                .disabled(!user.isEnabled())
                 .build();
     }
 
