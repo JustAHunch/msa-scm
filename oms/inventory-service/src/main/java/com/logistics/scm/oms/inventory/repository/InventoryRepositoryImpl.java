@@ -2,6 +2,9 @@ package com.logistics.scm.oms.inventory.repository;
 
 import com.logistics.scm.oms.inventory.entity.Inventory;
 import com.logistics.scm.oms.inventory.entity.QInventory;
+import com.querydsl.core.types.Ops;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
@@ -52,8 +55,14 @@ public class InventoryRepositoryImpl implements InventoryRepositoryCustom {
     public Integer getTotalAvailableQuantity(String productCode) {
         QInventory inventory = QInventory.inventory;
 
+        NumberExpression<Integer> availableQtySum = Expressions.numberOperation(
+                Integer.class,
+                Ops.AggOps.SUM_AGG,
+                inventory.availableQty
+        );
+
         Integer total = queryFactory
-                .select(inventory.availableQty.sum())
+                .select(availableQtySum)
                 .from(inventory)
                 .where(inventory.productCode.eq(productCode))
                 .fetchOne();

@@ -25,6 +25,22 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false                     # OSIV 비활성화 (성능 최적화)
 
+  # Kafka 설정
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: order-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: com.logistics.scm.oms.inventory.event
+
 # Eureka Client 설정
 eureka:
   client:
@@ -60,10 +76,17 @@ springdoc:
     doc-expansion: none              # 기본적으로 모두 접힌 상태
   show-actuator: false               # Actuator 엔드포인트 숨김
 
+# Kafka Topic 설정
+kafka:
+  topics:
+    order-events: order.events
+    inventory-events: inventory.events
+
 # 로깅 설정
 logging:
   level:
     com.scm.oms: DEBUG
     org.springframework.web: INFO
+    org.springframework.kafka: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE

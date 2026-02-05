@@ -4,6 +4,9 @@ import com.logistics.scm.oms.inventory.entity.QInventory;
 import com.logistics.scm.oms.inventory.entity.QStockMovement;
 import com.logistics.scm.oms.inventory.entity.StockMovement;
 import com.logistics.scm.oms.inventory.entity.StockMovementType;
+import com.querydsl.core.types.Ops;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -54,8 +57,14 @@ public class StockMovementRepositoryImpl implements StockMovementRepositoryCusto
     public Integer getTotalQuantityByMovementType(UUID inventoryId, StockMovementType movementType) {
         QStockMovement stockMovement = QStockMovement.stockMovement;
 
+        NumberExpression<Integer> quantitySum = Expressions.numberOperation(
+                Integer.class,
+                Ops.AggOps.SUM_AGG,
+                stockMovement.quantity
+        );
+
         Integer total = queryFactory
-                .select(stockMovement.quantity.sum())
+                .select(quantitySum)
                 .from(stockMovement)
                 .where(
                         stockMovement.inventoryId.eq(inventoryId),

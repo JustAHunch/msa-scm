@@ -49,11 +49,11 @@ public class Order extends BaseEntity {
     @Column(name = "customer_id", nullable = false, columnDefinition = "uuid")
     private UUID customerId;
 
-    @Schema(description = "주문 상태", example = "PENDING", requiredMode = Schema.RequiredMode.REQUIRED, 
-            allowableValues = {"PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"})
+    @Schema(description = "주문 상태", example = "CREATED", requiredMode = Schema.RequiredMode.REQUIRED, 
+            allowableValues = {"CREATED", "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"})
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status", nullable = false, length = 20)
-    private OrderStatus orderStatus = OrderStatus.PENDING;
+    private OrderStatus orderStatus = OrderStatus.CREATED;
 
     @Schema(description = "총 주문 금액", example = "150000.00", requiredMode = Schema.RequiredMode.REQUIRED)
     @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
@@ -70,6 +70,7 @@ public class Order extends BaseEntity {
     // Enum for Order Status
     @Schema(description = "주문 상태 코드")
     public enum OrderStatus {
+        @Schema(description = "주문 생성") CREATED,
         @Schema(description = "주문 접수") PENDING,
         @Schema(description = "주문 확정") CONFIRMED,
         @Schema(description = "출고 완료") SHIPPED,
