@@ -1,35 +1,37 @@
 package com.logistics.scm.oms.inventory.exception;
 
+import com.logistics.scm.oms.inventory.common.exception.EntityNotFoundException;
+import com.logistics.scm.oms.inventory.common.exception.ErrorCode;
+import lombok.Getter;
+
 import java.util.UUID;
 
-/**
- * 재고 없음 예외
- *
- * 요청한 재고 정보가 존재하지 않을 때 발생
- */
-public class InventoryNotFoundException extends RuntimeException {
-
+@Getter
+public class InventoryNotFoundException extends EntityNotFoundException {
     private final UUID warehouseId;
     private final String productCode;
+    private final UUID inventoryId;
 
     public InventoryNotFoundException(UUID warehouseId, String productCode) {
-        super(String.format("재고를 찾을 수 없습니다. 창고ID: %s, 상품코드: %s",
-                warehouseId, productCode));
+        super(ErrorCode.INVENTORY_NOT_FOUND);
         this.warehouseId = warehouseId;
         this.productCode = productCode;
+        this.inventoryId = null;
     }
 
     public InventoryNotFoundException(UUID inventoryId) {
-        super(String.format("재고를 찾을 수 없습니다. 재고ID: %s", inventoryId));
+        super(ErrorCode.INVENTORY_NOT_FOUND);
         this.warehouseId = null;
         this.productCode = null;
+        this.inventoryId = inventoryId;
     }
 
-    public UUID getWarehouseId() {
-        return warehouseId;
-    }
-
-    public String getProductCode() {
-        return productCode;
+    @Override
+    public String getMessage() {
+        if (inventoryId != null) {
+            return String.format("%s (재고ID: %s)", super.getMessage(), inventoryId);
+        }
+        return String.format("%s (창고ID: %s, 상품코드: %s)", 
+                super.getMessage(), warehouseId, productCode);
     }
 }
