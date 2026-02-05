@@ -417,7 +417,281 @@ public class OrderServiceImpl implements OrderService {
 - **DEBUG**: 개발/디버깅 정보
 - **TRACE**: 상세한 실행 흐름
 
-### 8. REST API 규칙
+### 8. 이벤트 발행 및 Outbox Pattern
+
+#### Transactional Outbox Pattern 필수 사용
+모든 이벤트 발행은 **Transactional Outbox Pattern**을 사용하여 이벤트 유실을 방지합니다.
+
+**❌ 잘못된 방법 - Kafka 직접 발행**
+```java
+@Service
+@RequiredArgsConstructor
+public class OrderServiceImpl implements OrderService {
+    
+    private final OrderRepository orderRepository;
+    private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
+
+    @Transactional
+    public Order createOrder(Order order) {
+        // 1. 주문 저장
+        Order savedOrder = orderRepository.save(order);
+        
+        // 2. Kafka로 직접 이벤트 발행 (❌ 위험: Kafka 장애 시 이벤트 유실)
+        OrderCreatedEvent event = createEvent(savedOrder);
+        kafkaTemplate.send("order.events", event);
+        
+        return savedOrder;
+    }
+}
+```
+
+**✅ 올바른 방법 - Outbox Pattern 사용**
+```java
+@Service
+@RequiredArgsConstructor
+public class OrderServiceImpl implements OrderService {
+    
+    private final OrderRepository orderRepository;
+    private final OutboxService outboxService;
+    private final ObjectMapper objectMapper;
+
+    @Transactional
+    public Order createOrder(Order order) {
+        // 1. 주문 저장
+        Order savedOrder = orderRepository.save(order);
+        
+        // 2. 이벤트를 Outbox 테이블에 저장 (비즈니스 데이터와 동일 트랜잭션)
+        OrderCreatedEvent event = createEvent(savedOrder);
+        try {
+            String payload = objectMapper.writeValueAsString(event);
+            outboxService.saveOutbox(
+                    "Order",                    // 집계 타입
+                    savedOrder.getId().toString(), // 집계 ID
+                    "OrderCreatedEvent",        // 이벤트 타입
+                    payload                     // JSON 페이로드
+            );
+        } catch (Exception e) {
+            log.error("Outbox 이벤트 저장 실패: orderId={}", savedOrder.getId(), e);
+            throw new RuntimeException("이벤트 저장 실패", e);
+        }
+        
+        // 3. Kafka 발행은 OutboxEventPublisher가 자동으로 처리
+        return savedOrder;
+    }
+}
+```
+
+#### Outbox 구성 요소
+
+##### 1. Outbox Entity
+```java
+@Entity
+@Table(name = "outbox_tb")
+@Getter
+@NoArgsConstructor
+@Builder
+@AllArgsConstructor
+public class Outbox extends BaseEntity {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID outboxId;
+    
+    private String aggregateType;  // 집계 타입 (Order, Inventory 등)
+    private String aggregateId;    // 집계 ID
+    private String eventType;      // 이벤트 타입 (OrderCreatedEvent 등)
+    
+    @Column(columnDefinition = "TEXT")
+    private String payload;        // JSON 페이로드
+    
+    @Enumerated(EnumType.STRING)
+    private OutboxStatus status;   // PENDING, PUBLISHED, FAILED
+    
+    private Integer retryCount;    // 재시도 횟수
+    private LocalDateTime lastAttemptAt;  // 마지막 시도 시각
+    private LocalDateTime publishedAt;     // 발행 완료 시각
+    
+    @Column(columnDefinition = "TEXT")
+    private String errorMessage;   // 오류 메시지
+    
+    // 비즈니스 메서드
+    public void markAsPublished() {
+        this.status = OutboxStatus.PUBLISHED;
+        this.publishedAt = LocalDateTime.now();
+    }
+    
+    public void markAsFailed(String errorMessage) {
+        this.status = OutboxStatus.FAILED;
+        this.retryCount++;
+        this.lastAttemptAt = LocalDateTime.now();
+        this.errorMessage = errorMessage;
+    }
+}
+```
+
+##### 2. OutboxService
+```java
+public interface OutboxService {
+    Outbox saveOutbox(String aggregateType, String aggregateId, 
+                      String eventType, String payload);
+    void markAsPublished(Outbox outbox);
+    void markAsFailed(Outbox outbox, String errorMessage);
+}
+```
+
+##### 3. OutboxEventPublisher (Scheduler)
+```java
+@Component
+@RequiredArgsConstructor
+public class OutboxEventPublisher {
+    
+    private final OutboxRepository outboxRepository;
+    private final OutboxService outboxService;
+    private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
+    private final ObjectMapper objectMapper;
+    
+    /**
+     * 발행 대기 중인 이벤트 처리 (5초마다)
+     */
+    @Scheduled(fixedDelay = 5000, initialDelay = 10000)
+    public void publishPendingEvents() {
+        List<Outbox> pendingOutboxes = outboxRepository
+                .findByStatusOrderByCreatedAtAsc(OutboxStatus.PENDING);
+        
+        for (Outbox outbox : pendingOutboxes) {
+            try {
+                publishEvent(outbox);
+            } catch (Exception e) {
+                outboxService.markAsFailed(outbox, e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * 발행 실패 이벤트 재시도 (30초마다, 최대 3회)
+     */
+    @Scheduled(fixedDelay = 30000, initialDelay = 30000)
+    public void retryFailedEvents() {
+        LocalDateTime retryThreshold = LocalDateTime.now().minusMinutes(1);
+        List<Outbox> failedOutboxes = outboxRepository
+                .findByStatusAndLastAttemptAtBeforeOrderByCreatedAtAsc(
+                        OutboxStatus.FAILED, retryThreshold);
+        
+        for (Outbox outbox : failedOutboxes) {
+            if (outbox.canRetry()) {  // 최대 3회까지
+                try {
+                    publishEvent(outbox);
+                } catch (Exception e) {
+                    outboxService.markAsFailed(outbox, e.getMessage());
+                }
+            }
+        }
+    }
+    
+    /**
+     * 발행 완료된 오래된 이벤트 정리 (매일 새벽 2시, 7일 이상 지난 것)
+     */
+    @Scheduled(cron = "0 0 2 * * *")
+    public void cleanupPublishedEvents() {
+        LocalDateTime cleanupThreshold = LocalDateTime.now().minusDays(7);
+        List<Outbox> oldPublishedOutboxes = outboxRepository
+                .findByStatusAndPublishedAtBefore(OutboxStatus.PUBLISHED, cleanupThreshold);
+        
+        if (!oldPublishedOutboxes.isEmpty()) {
+            outboxRepository.deleteAll(oldPublishedOutboxes);
+        }
+    }
+    
+    private void publishEvent(Outbox outbox) throws Exception {
+        OrderCreatedEvent event = objectMapper.readValue(
+                outbox.getPayload(), OrderCreatedEvent.class);
+        
+        kafkaTemplate.send("order.events", event)
+                .whenComplete((result, ex) -> {
+                    if (ex == null) {
+                        outboxService.markAsPublished(outbox);
+                    } else {
+                        outboxService.markAsFailed(outbox, ex.getMessage());
+                    }
+                });
+    }
+}
+```
+
+##### 4. Application 클래스에 Scheduling 활성화
+```java
+@EnableScheduling  // ⭐ 필수!
+@EnableDiscoveryClient
+@SpringBootApplication
+public class OrderServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(OrderServiceApplication.class, args);
+    }
+}
+```
+
+#### Outbox Pattern의 장점
+
+1. **원자성 보장**: 비즈니스 데이터와 이벤트를 동일 트랜잭션으로 저장
+2. **이벤트 유실 방지**: Kafka 장애 시에도 Outbox 테이블에 이벤트 보존
+3. **자동 복구**: Scheduler가 주기적으로 폴링하여 미발행 이벤트 자동 재발행
+4. **재시도 전략**: 최대 3회, 1분 간격으로 재시도
+5. **상태 관리**: PENDING → PUBLISHED / FAILED 상태 전이로 멱등성 보장
+6. **자동 정리**: 발행 완료된 오래된 이벤트 자동 삭제
+
+#### 이벤트 수신 시 Outbox 사용
+
+이벤트를 수신하여 처리한 후 응답 이벤트를 발행할 때도 Outbox를 사용합니다.
+
+```java
+@Component
+@RequiredArgsConstructor
+public class OrderEventListener {
+    
+    private final InventoryService inventoryService;
+    private final OutboxService outboxService;
+    private final ObjectMapper objectMapper;
+    
+    @KafkaListener(topics = "${kafka.topics.order-events}")
+    public void handleOrderCreatedEvent(OrderCreatedEvent event) {
+        try {
+            // 1. 재고 차감
+            inventoryService.reserveStock(event);
+            
+            // 2. 성공 이벤트를 Outbox에 저장
+            InventoryReservedEvent reservedEvent = createSuccessEvent(event);
+            String payload = objectMapper.writeValueAsString(reservedEvent);
+            outboxService.saveOutbox(
+                    "Inventory",
+                    event.getOrderId(),
+                    "InventoryReservedEvent",
+                    payload
+            );
+            
+        } catch (InsufficientStockException e) {
+            // 3. 실패 이벤트를 Outbox에 저장
+            InventoryReservationFailedEvent failedEvent = createFailureEvent(event, e);
+            String payload = objectMapper.writeValueAsString(failedEvent);
+            outboxService.saveOutbox(
+                    "Inventory",
+                    event.getOrderId(),
+                    "InventoryReservationFailedEvent",
+                    payload
+            );
+        }
+    }
+}
+```
+
+#### 주의사항
+
+1. **Kafka 직접 발행 금지**: 모든 이벤트는 반드시 Outbox를 통해 발행
+2. **트랜잭션 내 저장**: OutboxService.saveOutbox()는 비즈니스 로직과 동일 트랜잭션
+3. **ObjectMapper 활용**: 이벤트를 JSON으로 직렬화하여 저장
+4. **에러 처리**: Outbox 저장 실패 시 RuntimeException 발생시켜 트랜잭션 롤백
+5. **Scheduler 활성화**: @EnableScheduling 어노테이션 필수
+
+### 9. REST API 규칙
 
 #### URL 설계
 ```java
@@ -528,7 +802,7 @@ public class OrderResource {
 
 **상세 가이드**: [공통 응답 규격 및 예외 처리 가이드](./API_RESPONSE_GUIDE.md)
 
-### 9. 코드 포맷팅
+### 10. 코드 포맷팅
 
 #### 들여쓰기
 - 4 spaces (탭 사용 금지)
@@ -563,7 +837,7 @@ public void method()
 - 최대 50줄 권장
 - 너무 길면 분리 고려
 
-### 10. 테스트 코드
+### 11. 테스트 코드
 
 #### 테스트 메서드 명명
 ```java
