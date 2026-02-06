@@ -2,10 +2,7 @@ package com.scm.warehouse.entity;
 
 import com.scm.warehouse.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -18,6 +15,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "INBOUND_ITEM_TB", indexes = {
     @Index(name = "idx_inbound_id", columnList = "inbound_id"),
@@ -52,6 +51,36 @@ public class InboundItem extends BaseEntity {
     private QcStatus qcStatus;
 
     public enum QcStatus {
-        PENDING, PASS, FAIL
+        PENDING,  // 대기
+        PASS,     // 합격
+        FAIL      // 불합격
+    }
+
+    // Getter aliases
+    public UUID getId() {
+        return this.inboundItemId;
+    }
+
+    // Business Methods
+    /**
+     * 입고 수량 업데이트
+     */
+    public void updateReceivedQuantity(Integer quantity) {
+        this.receivedQty = quantity;
+    }
+
+    /**
+     * QC 합격 처리
+     */
+    public void passQc() {
+        this.qcStatus = QcStatus.PASS;
+    }
+
+    /**
+     * QC 불합격 처리
+     */
+    public void failQc() {
+        this.qcStatus = QcStatus.FAIL;
     }
 }
+

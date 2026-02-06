@@ -56,6 +56,12 @@ public class Inventory extends BaseEntity {
     @Column(name = "total_qty", nullable = false)
     private Integer totalQty;
 
+    @Column(name = "in_transit_qty", nullable = false)
+    private Integer inTransitQty;
+
+    @Column(name = "hold_qty", nullable = false)
+    private Integer holdQty;
+
     @Column(name = "safety_stock", nullable = false)
     private Integer safetyStock;
 
@@ -77,6 +83,14 @@ public class Inventory extends BaseEntity {
 
     public Integer getTotalQuantity() {
         return this.totalQty;
+    }
+
+    public Integer getInTransitQuantity() {
+        return this.inTransitQty;
+    }
+
+    public Integer getHoldQuantity() {
+        return this.holdQty;
     }
 
     // Business Methods
@@ -151,6 +165,90 @@ public class Inventory extends BaseEntity {
      */
     public boolean isBelowSafetyStock() {
         return this.availableQty < this.safetyStock;
+    }
+
+    /**
+     * 허브 간 이동 출고 (Transfer Out)
+     * 출발 허브의 가용 재고를 차감하고 이동 중 재고로 전환
+     */
+    public void transferOut(Integer quantity) {
+        if (this.availableQty < quantity) {
+            throw new IllegalStateException("가용 재고가 부족합니다.");
+        }
+        this.availableQty -= quantity;
+        this.totalQty -= quantity;
+        // 출발 허브에서는 이동 중 재고를 추적하지 않음 (목적지 허브에서 추적)
+        this.lastUpdated = LocalDateTime.now();
+    }
+
+    /**
+     * 허브 간 이동 입고 (Transfer In)
+     * 목적지 허브의 재고를 증가 (이동 중 재고 → 가용 재고)
+     */
+    public void transferIn(Integer quantity) {
+        this.totalQty += quantity;
+        this.availableQty += quantity;
+        this.lastUpdated = LocalDateTime.now();
+    }
+
+    /**
+     * 이동 중 재고 증가
+     * TO 완료 시 이동 중 상태로 기록 (전체 시스템 재고 추적용)
+     */
+    public void increaseInTransit(Integer quantity) {
+        this.inTransitQty += quantity;
+        this.lastUpdated = LocalDateTime.now();
+    }
+
+    /**
+     * 이동 중 재고 감소
+     * TI 완료 시 이동 중 재고를 가용 재고로 전환
+     */
+    public void decreaseInTransit(Integer quantity) {
+        if (this.inTransitQty < quantity) {
+            throw new IllegalStateException("이동 중 재고가 부족합니다.");
+        }
+        this.inTransitQty -= quantity;
+        this.lastUpdated = LocalDateTime.now();
+    }
+
+    /**
+     * 보류/불량 재고 처리
+     * 입고 검수 불합격 또는 파손 상품을 보류 상태로 전환
+     */
+    public void hold(Integer quantity) {
+        if (this.availableQty < quantity) {
+            throw new IllegalStateException("가용 재고가 부족합니다.");
+        }
+        this.availableQty -= quantity;
+        this.holdQty += quantity;
+        this.lastUpdated = LocalDateTime.now();
+    }
+
+    /**
+     * 보류 재고 해제
+     * 보류 상태에서 다시 판매 가능 상태로 전환
+     */
+    public void releaseHold(Integer quantity) {
+        if (this.holdQty < quantity) {
+            throw new IllegalStateException("보류 재고가 부족합니다.");
+        }
+        this.holdQty -= quantity;
+        this.availableQty += quantity;
+        this.lastUpdated = LocalDateTime.now();
+    }
+
+    /**
+     * 보류 재고 폐기
+     * 파손/불량으로 폐기 처리
+     */
+    public void discardHold(Integer quantity) {
+        if (this.holdQty < quantity) {
+            throw new IllegalStateException("보류 재고가 부족합니다.");
+        }
+        this.holdQty -= quantity;
+        this.totalQty -= quantity;
+        this.lastUpdated = LocalDateTime.now();
     }
 
 }
