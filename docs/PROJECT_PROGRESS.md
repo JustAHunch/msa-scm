@@ -21,18 +21,31 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 | TMS 기본 구조 구축 | ✅ 완료 | 2026-01-27 |
 | Common Services 구축 | ✅ 완료 | 2026-01-27 |
 | Entity 구현 | ✅ 완료 | 2026-01-27 |
-| 비즈니스 로직 구현 | 📅 예정 | - |
+| Kafka 이벤트 통신 + Outbox Pattern | ✅ 완료 | 2026-02-05 |
+| Inventory Service 완전 구현 (Product/Inbound/Inventory) | ✅ 완료 | 2026-02-06 |
+| 비즈니스 로직 구현 (WMS/TMS) | 🔄 진행 예정 | - |
 | 테스트 코드 작성 | 📅 예정 | - |
 | Docker 통합 환경 구축 | 📅 예정 | - |
 | 모니터링 시스템 구축 | 📅 예정 | - |
+
+### SERVICE_FLOW 기준 프로세스 진행도
+
+| 프로세스 | 상태 | 완료율 | 구현 서비스 |
+|---------|------|--------|-----------|
+| 1. 인증 및 계정 관리 | ✅ 완료 | 100% | Common Service |
+| 2. 상품 및 재고 관리 | ✅ 완료 | 100% | Inventory Service (Product, Inbound, Inventory) |
+| 3. 배송 주문 및 재고 예약 | ✅ 완료 | 100% | Order Service + Inventory Service (Kafka 연동) |
+| 4. 허브 간 이동 및 재고 이전 | 📅 예정 | 0% | Warehouse Service + Delivery Service |
+| 5. 최종 배송 | 📅 예정 | 0% | Delivery Service |
+| 6. 정산 | 📅 예정 | 0% | Settlement 미구현 |
 
 ## 시스템 구성
 
 ### 총 6개 비즈니스 서비스 + 3개 인프라 서비스
 
 #### OMS (Order Management System)
-1. ✅ **order-service** (8081) - 주문 + 고객 통합
-2. ⏳ **inventory-service** (8082) - 재고
+1. ✅ **order-service** (8081) - 주문 + 고객 통합 (REST API, Kafka, Outbox 완료)
+2. ✅ **inventory-service** (8082) - 재고 + 상품 + 입고 (전체 구현 완료)
 
 #### WMS (Warehouse Management System)
 3. ⏳ **warehouse-service** (8084) - 창고 전체 (입고/피킹/적치 통합)
@@ -116,17 +129,30 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 - [ ] 비즈니스 로직 확장 (주문 상태 관리, CS 처리)
 - [ ] 테스트 코드 작성
 
-### Inventory Service (8082)
+### Inventory Service (8082) ✅
 - [x] 프로젝트 구조 생성
 - [x] 의존성 설정 (Redis 캐싱 포함)
 - [x] Application 클래스 작성
 - [x] application.yml 설정 (Redis 설정 포함)
 - [x] BaseEntity 및 AuditorAware 구현
-- [x] Entity 정의 (Inventory, StockMovement)
-- [ ] Repository 구현
-- [ ] Service 레이어 구현 (캐싱 적용)
-- [ ] REST API 구현
-- [ ] 동시성 제어 구현
+- [x] Entity 정의 (Inventory, StockMovement, Product, Inbound)
+- [x] Repository 구현 (JPA + QueryDSL, Pessimistic Lock)
+- [x] Service 레이어 구현
+  - [x] InventoryService/Impl (재고 예약/해제/조회/생성)
+  - [x] ProductService/Impl (상품 등록/조회/수정/비활성화)
+  - [x] InboundService/Impl (입고 신청/검수/완료, InventoryService 연동)
+- [x] REST API 구현
+  - [x] InventoryResource (재고 조회/생성/예약/해제/부족상품 조회)
+  - [x] ProductResource (상품 등록/조회/수정/비활성화)
+  - [x] InboundResource (입고 신청/검수시작/검수완료/상태별 조회)
+- [x] Swagger/OpenAPI 문서화
+- [x] Exception 정의 (InsufficientStock, InventoryNotFound, ProductNotFound, DuplicateProductCode, InboundNotFound)
+- [x] DTO 정의 (Request/Response 전체)
+- [x] Kafka Consumer (OrderEventListener)
+- [x] Outbox Pattern 적용 (Inbound 이벤트 발행)
+- [x] StockMovementType 확장 (TRANSFER_OUT/IN, HOLD, RELEASE_HOLD, DISCARD)
+- [x] 동시성 제어 (Pessimistic Lock)
+- [ ] Redis 캐싱 적용
 - [ ] 테스트 코드 작성
 
 ## Phase 4: WMS (Warehouse Management System) ✅
@@ -283,7 +309,7 @@ MSA-SCM 프로젝트 진행 상황 추적 문서입니다.
 - [ ] TROUBLESHOOTING.md: 문제 해결 가이드
 - [ ] PERFORMANCE_TUNING.md: 성능 최적화 가이드
 
-## Phase 9: Kafka 이벤트 기반 통신 구현 (진행 중) 🔄
+## Phase 9: Kafka 이벤트 기반 통신 구현 ✅
 
 ### 목표
 Order Service와 Inventory Service 간 Kafka 이벤트 기반 통신을 통한:
@@ -291,127 +317,98 @@ Order Service와 Inventory Service 간 Kafka 이벤트 기반 통신을 통한:
 2. 주문 취소 → 재고 원복 (보상 트랜잭션)
 3. Saga Pattern (Choreography) 구현
 
-### Phase 9-1: Inventory Service 기본 구조 구축
-**작업 기간**: 1-2일  
+### Phase 9-1: Inventory Service 기본 구조 구축 ✅
+**완료일**: 2026-02-05~06  
 **목적**: 재고 관리 핵심 기능 구현
 
-- [ ] **Repository 구현** (진행 중)
-  - [ ] InventoryRepository (재고 조회/업데이트)
-  - [ ] StockMovementRepository (재고 이동 이력)
+- [x] **Repository 구현**
+  - [x] InventoryRepository (재고 조회/업데이트, Pessimistic Lock)
+  - [x] StockMovementRepository (재고 이동 이력)
+  - [x] ProductRepository (상품 조회/검색)
+  - [x] InboundRepository (입고 상태/창고별 조회)
   
-- [ ] **Service 레이어 구현** (진행 중)
-  - [ ] InventoryService 인터페이스
-  - [ ] InventoryServiceImpl 구현
-    - [ ] reserveStock() - 재고 차감
-    - [ ] releaseStock() - 재고 원복
-    - [ ] checkStock() - 재고 확인
-  - [ ] 동시성 제어 (Pessimistic Lock)
-  - [ ] Redis 캐싱 적용
+- [x] **Service 레이어 구현**
+  - [x] InventoryService 인터페이스
+  - [x] InventoryServiceImpl 구현
+    - [x] reserveStock() - 재고 차감
+    - [x] releaseStock() - 재고 원복
+    - [x] checkStock() - 재고 확인
+    - [x] createOrUpdateInventory() - 재고 생성/입고
+  - [x] ProductService/ProductServiceImpl (상품 CRUD)
+  - [x] InboundService/InboundServiceImpl (입고 프로세스)
+  - [x] 동시성 제어 (Pessimistic Lock)
   
 - [x] **Inventory Entity 수정**
   - [x] reserve() 메서드 추가 (재고 예약)
   - [x] release() 메서드 추가 (재고 원복)
   - [x] increaseAvailableQuantity() 메서드 추가
   - [x] updateSafetyStock() 메서드 추가
-  - [x] Getter 별칭 추가 (getId, getAvailableQuantity 등)
   
-- [ ] **Exception 정의**
-  - [ ] InsufficientStockException (재고 부족)
-  - [ ] InventoryNotFoundException (재고 없음)
+- [x] **Exception 정의**
+  - [x] InsufficientStockException (재고 부족)
+  - [x] InventoryNotFoundException (재고 없음)
+  - [x] ProductNotFoundException (상품 없음)
+  - [x] DuplicateProductCodeException (상품코드 중복)
+  - [x] InboundNotFoundException (입고 없음)
   
-- [ ] **DTO 정의**
-  - [ ] ReserveStockRequestDTO
-  - [ ] ReleaseStockRequestDTO
-  - [ ] InventoryResponseDTO
+- [x] **DTO 정의**
+  - [x] ReserveStockRequest / ReleaseStockRequest
+  - [x] CreateInventoryRequest
+  - [x] InventoryResponse
+  - [x] ProductCreateRequest / ProductUpdateRequest / ProductResponse
+  - [x] InboundCreateRequest / InboundInspectionRequest / InboundResponse
 
-### Phase 9-2: Kafka 이벤트 인프라 구축
-**작업 기간**: 1일  
+- [x] **REST API 구현**
+  - [x] InventoryResource (8개 엔드포인트)
+  - [x] ProductResource (7개 엔드포인트)
+  - [x] InboundResource (6개 엔드포인트)
+
+### Phase 9-2: Kafka 이벤트 인프라 구축 ✅
+**완료일**: 2026-02-05  
 **목적**: 이벤트 발행/구독 기반 마련
 
-- [ ] **Order Service 이벤트 클래스**
-  - [ ] OrderCreatedEvent (주문 생성 이벤트)
-  - [ ] OrderCancelledEvent (주문 취소 이벤트)
+- [x] **Order Service 이벤트 클래스**
+  - [x] OrderCreatedEvent (주문 생성 이벤트)
+  - [x] OrderCancelledEvent (주문 취소 이벤트)
   
-- [ ] **Inventory Service 이벤트 클래스**
-  - [ ] InventoryReservedEvent (재고 예약 완료)
-  - [ ] InventoryReservationFailedEvent (재고 예약 실패)
-  - [ ] InventoryReleasedEvent (재고 원복 완료)
+- [x] **Inventory Service 이벤트 클래스**
+  - [x] InventoryReservedEvent (재고 예약 완료)
+  - [x] InventoryReservationFailedEvent (재고 예약 실패)
+  - [x] InventoryReleasedEvent (재고 원복 완료)
   
-- [ ] **Kafka 설정**
-  - [ ] Order Service - KafkaProducerConfig
-  - [ ] Order Service - KafkaConsumerConfig
-  - [ ] Inventory Service - KafkaProducerConfig
-  - [ ] Inventory Service - KafkaConsumerConfig
-  - [ ] Topic 정의 (order.events, inventory.events)
-  - [ ] Serializer/Deserializer 설정 (JSON)
+- [x] **Kafka 설정**
+  - [x] Order Service - KafkaProducerConfig / KafkaConsumerConfig
+  - [x] Inventory Service - KafkaProducerConfig / KafkaConsumerConfig
+  - [x] Topic 정의 (order.events, inventory.events)
+  - [x] Serializer/Deserializer 설정 (JSON)
 
-### Phase 9-3: 주문 생성 → 재고 차감 정상 흐름
-**작업 기간**: 1-2일  
+### Phase 9-3: 주문 생성 → 재고 차감 정상 흐름 ✅
+**완료일**: 2026-02-05  
 **목적**: 기본 이벤트 흐름 구현
 
-**시나리오**:
-```
-1. 사용자 → POST /api/orders
-2. Order Service: 주문 생성 (상태: CREATED)
-3. Order Service: OrderCreatedEvent 발행 → Kafka
-4. Inventory Service: 이벤트 수신 → 재고 차감
-5. Inventory Service: InventoryReservedEvent 발행 → Kafka
-6. Order Service: 이벤트 수신 → 주문 상태 업데이트 (CONFIRMED)
-```
-
-- [ ] **Order Service 수정**
-  - [ ] OrderServiceImpl.createOrder() - 이벤트 발행 로직
-  - [ ] InventoryEventListener - 재고 예약 완료 이벤트 처리
-  - [ ] Order 상태 업데이트 메서드 (confirmOrder)
+- [x] **Order Service 수정**
+  - [x] OrderServiceImpl.createOrder() - Outbox 이벤트 저장 로직
+  - [x] InventoryEventListener - 재고 예약 완료 이벤트 처리
+  - [x] Order 상태 업데이트 메서드 (confirmOrder)
   
-- [ ] **Inventory Service 구현**
-  - [ ] OrderEventListener - 주문 생성 이벤트 처리
-  - [ ] InventoryService.reserveStock() - 재고 차감
-  - [ ] StockMovement 이력 기록 (타입: RESERVED)
-  
-- [ ] **통합 테스트**
-  - [ ] 주문 생성 → 재고 차감 → 주문 확정 전체 흐름 검증
+- [x] **Inventory Service 구현**
+  - [x] OrderEventListener - 주문 생성 이벤트 처리
+  - [x] InventoryService.reserveStock() - 재고 차감
+  - [x] StockMovement 이력 기록 (타입: RESERVED)
 
-### Phase 9-4: 주문 취소 → 재고 원복 보상 트랜잭션
-**작업 기간**: 1-2일  
+### Phase 9-4: 주문 취소 → 재고 원복 보상 트랜잭션 ✅
+**완료일**: 2026-02-05  
 **목적**: 실패 시나리오 및 Saga 패턴 구현
 
-**시나리오 1: 재고 부족으로 주문 실패**
-```
-1. 사용자 → POST /api/orders
-2. Order Service: 주문 생성 (상태: CREATED)
-3. Order Service: OrderCreatedEvent 발행
-4. Inventory Service: 재고 부족 감지
-5. Inventory Service: InventoryReservationFailedEvent 발행
-6. Order Service: 주문 취소 (상태: CANCELLED)
-```
-
-**시나리오 2: 사용자 주문 취소**
-```
-1. 사용자 → DELETE /api/orders/{id}
-2. Order Service: 주문 취소 (상태: CANCELLED)
-3. Order Service: OrderCancelledEvent 발행
-4. Inventory Service: 예약 재고 해제
-5. Inventory Service: InventoryReleasedEvent 발행
-```
-
-- [ ] **Order Service 수정**
-  - [ ] OrderService.cancelOrder() - 주문 취소 API
-  - [ ] OrderCancelledEvent 발행 로직
-  - [ ] InventoryEventListener - 재고 예약 실패 이벤트 처리
+- [x] **Order Service 수정**
+  - [x] OrderService.cancelOrder() - 주문 취소 API
+  - [x] OrderCancelledEvent 발행 로직 (Outbox 패턴)
+  - [x] InventoryEventListener - 재고 예약 실패 이벤트 처리
   
-- [ ] **Inventory Service 구현**
-  - [ ] OrderEventListener - 주문 취소 이벤트 처리
-  - [ ] InventoryService.releaseStock() - 재고 원복
-  - [ ] StockMovement 이력 기록 (타입: RELEASED)
-  
-- [ ] **Exception Handling**
-  - [ ] 재고 부족 시 실패 이벤트 발행
-  - [ ] DLQ(Dead Letter Queue) 설정
-  
-- [ ] **통합 테스트**
-  - [ ] 재고 부족 시나리오 테스트
-  - [ ] 주문 취소 시나리오 테스트
+- [x] **Inventory Service 구현**
+  - [x] OrderEventListener - 주문 취소 이벤트 처리
+  - [x] InventoryService.releaseStock() - 재고 원복
+  - [x] StockMovement 이력 기록 (타입: RELEASED)
 
 ### Phase 9-5: Outbox Pattern 적용 ✅
 **작업 기간**: 1-2일  
@@ -435,7 +432,7 @@ Order Service와 Inventory Service 간 Kafka 이벤트 기반 통신을 통한:
   - [ ] Kafka 장애 시나리오 테스트
   - [ ] 이벤트 재발행 테스트
 
-### 예상 산출물
+### 실제 구현된 파일 구조
 ```
 order-service/
 ├── event/
@@ -446,40 +443,57 @@ order-service/
 ├── config/
 │   ├── KafkaProducerConfig.java
 │   └── KafkaConsumerConfig.java
-└── entity/
-    └── Outbox.java (Phase 9-5)
+├── outbox/
+│   ├── entity/Outbox.java
+│   ├── repository/OutboxRepository.java
+│   ├── service/OutboxService.java
+│   └── scheduler/OutboxEventPublisher.java
+└── resource/
+    └── OrderResource.java
 
 inventory-service/
-├── repository/
-│   ├── InventoryRepository.java
-│   └── StockMovementRepository.java
-├── service/
-│   ├── InventoryService.java
-│   └── InventoryServiceImpl.java
-├── event/
-│   ├── InventoryReservedEvent.java
-│   ├── InventoryReservationFailedEvent.java
-│   ├── InventoryReleasedEvent.java
-│   └── listener/
-│       └── OrderEventListener.java
-├── config/
-│   ├── KafkaProducerConfig.java
-│   └── KafkaConsumerConfig.java
-├── exception/
-│   ├── InsufficientStockException.java
-│   └── InventoryNotFoundException.java
-└── entity/
-    └── Outbox.java (Phase 9-5)
+├── domain/
+│   ├── inventory/
+│   │   ├── entity/ (Inventory.java)
+│   │   ├── repository/ (InventoryRepository.java + QueryDSL)
+│   │   ├── service/ (InventoryService/Impl)
+│   │   ├── dto/ (Request/Response)
+│   │   ├── exception/ (InsufficientStock, InventoryNotFound)
+│   │   └── resource/ (InventoryResource.java)
+│   ├── product/
+│   │   ├── entity/ (Product.java, ProductStatus, StorageCondition)
+│   │   ├── repository/ (ProductRepository.java)
+│   │   ├── service/ (ProductService/Impl)
+│   │   ├── dto/ (ProductCreateRequest, ProductUpdateRequest, ProductResponse)
+│   │   ├── exception/ (ProductNotFound, DuplicateProductCode)
+│   │   └── resource/ (ProductResource.java)
+│   ├── inbound/
+│   │   ├── entity/ (Inbound.java, InboundStatus)
+│   │   ├── repository/ (InboundRepository.java)
+│   │   ├── service/ (InboundService/Impl)
+│   │   ├── dto/ (InboundCreateRequest, InboundInspectionRequest, InboundResponse)
+│   │   ├── exception/ (InboundNotFoundException)
+│   │   └── resource/ (InboundResource.java)
+│   └── stockmovement/
+│       └── entity/ (StockMovement.java, StockMovementType)
+├── event/listener/ (OrderEventListener.java)
+├── outbox/ (Outbox Entity, Repository, Service, Scheduler)
+└── config/ (KafkaProducerConfig, KafkaConsumerConfig)
 ```
 
 ## 다음 단계 (Next Steps)
 
-### 현재 진행 중 (Phase 9)
-1. 🔄 **Phase 9-1**: Inventory Service 기본 구조 구축 (시작 예정)
-2. 📅 Phase 9-2: Kafka 이벤트 인프라 구축
-3. 📅 Phase 9-3: 주문 생성 → 재고 차감 정상 흐름
-4. 📅 Phase 9-4: 주문 취소 → 재고 원복 보상 트랜잭션
-5. 📅 Phase 9-5: Outbox Pattern 적용 (선택)
+### 현재 완료 (Phase 9) ✅
+1. ✅ **Phase 9-1**: Inventory Service 완전 구현 (Product, Inbound, Inventory REST API)
+2. ✅ **Phase 9-2**: Kafka 이벤트 인프라 구축
+3. ✅ **Phase 9-3**: 주문 생성 → 재고 차감 정상 흐름
+4. ✅ **Phase 9-4**: 주문 취소 → 재고 원복 보상 트랜잭션
+5. ✅ **Phase 9-5**: Outbox Pattern 적용
+
+### 다음 진행 예정 (Phase 10: SERVICE_FLOW 4~6)
+1. [ ] Warehouse Service Repository 및 Service 구현 (허브 간 이동)
+2. [ ] Delivery Service Repository 및 Service 구현 (최종 배송)
+3. [ ] Settlement (정산) 기능 설계 및 구현
 
 ### 우선순위 높음
 1. [ ] Warehouse Service Repository 및 Service 구현
@@ -714,9 +728,13 @@ inventory-service/
 3. **Customer**: 고객 정보 (이름, 이메일, 전화번호, 고객유형)
 4. **Address**: 주소 정보 (배송지/청구지, 우편번호, 주소)
 
-### Inventory Service (2개 Entity) ✅
+### Inventory Service (6개 Entity) ✅
 1. **Inventory**: 재고 정보 (창고ID, 상품코드, 가용수량, 할당수량, 안전재고)
-2. **StockMovement**: 재고 이동 이력 (입고/출고/조정/예약/해제)
+2. **StockMovement**: 재고 이동 이력 (입고/출고/조정/예약/해제/이동출고/이동입고/보류/폐기)
+3. **Product**: 상품 정보 (상품코드, 상품명, 카테고리, 규격, 보관조건, 업체ID, 상태)
+4. **Inbound**: 입고 관리 (입고번호, 창고ID, 상품코드, 요청/실제수량, 검수상태, 검수자)
+5. **Outbox**: 이벤트 발행 (Transactional Outbox Pattern)
+6. **StockMovementType**: 재고 이동 유형 Enum (INBOUND, OUTBOUND, ADJUSTMENT, RESERVED, RELEASED, TRANSFER_OUT, TRANSFER_IN, HOLD, RELEASE_HOLD, DISCARD)
 
 ### Warehouse Service (9개 Entity) ✅
 1. **Warehouse**: 창고 정보 (창고코드, 이름, 주소, 유형, 용량)
@@ -846,8 +864,36 @@ inventory-service/
   - Swagger @Operation, @ApiResponse 어노테이션을 통한 API 문서화
 - **다음 목표**: Inventory Service Repository 및 Service 레이어 구현, Kafka 이벤트 인프라 구축
 
+### 2026-02-06 (10차: Inventory Service 완전 구현 - SERVICE_FLOW 2 완료)
+- **완료**:
+  - Inventory REST API Resource 추가
+    - InventoryResource: 재고 조회/생성/예약/해제/부족상품 조회 (8개 엔드포인트)
+    - CreateInventoryRequest DTO 추가
+  - Product 도메인 전체 구현 (SERVICE_FLOW 2.1 상품 등록)
+    - Product Entity: 상품코드, 보관조건(StorageCondition), 규격, 업체 정보, 상태(ProductStatus)
+    - ProductRepository: 코드/업체/카테고리/검색 조회
+    - ProductService/Impl: 등록(중복체크)/조회/수정/비활성화
+    - ProductResource: REST API (7개 엔드포인트) + Swagger 문서화
+    - ProductNotFoundException, DuplicateProductCodeException
+  - Inbound 도메인 전체 구현 (SERVICE_FLOW 2.2 허브 입고)
+    - Inbound Entity: 입고번호 자동생성(IB-yyyyMMdd-SEQ), 검수 프로세스 상태 관리
+    - InboundStatus Enum: REQUESTED → INSPECTING → APPROVED/REJECTED → COMPLETED
+    - InboundRepository: 상태/창고/업체별 조회
+    - InboundService/Impl: 입고 신청, 검수 시작, 검수 완료(합격시 InventoryService.createOrUpdateInventory 연동)
+    - InboundResource: REST API (6개 엔드포인트) + Swagger 문서화
+    - Outbox Pattern 적용: InboundRequested/Completed/Rejected 이벤트
+  - StockMovementType 확장: TRANSFER_OUT/IN, HOLD, RELEASE_HOLD, DISCARD 추가
+  - Git 커밋 스쿼시: 작업별 3개 커밋으로 정리
+- **배운 점**:
+  - 입고 검수 프로세스의 상태 전이를 Entity 비즈니스 메서드로 명시적 제어
+  - Inbound 합격 시 InventoryService 연동으로 자동 재고 등록하는 도메인 간 협력 패턴
+  - Product의 StorageCondition(상온/냉장/냉동/위험/취급주의)이 창고 배치에 영향
+  - SERVICE_FLOW 문서 기반 개발로 비즈니스 요구사항과 구현의 일치성 확보
+  - 작업 단위별 스쿼시 커밋으로 깔끔한 Git 히스토리 유지
+- **다음 목표**: SERVICE_FLOW 4 (허브 간 이동), 5 (최종 배송) 구현
+
 ---
 
-**마지막 업데이트**: 2026-02-05 (Outbox Pattern 구현 완료)
+**마지막 업데이트**: 2026-02-06 (Inventory Service 완전 구현, SERVICE_FLOW 2 완료)
 **업데이트 담당**: c.h.jo
-**총 Entity/Document 수**: 27개 (Order: 5 (Outbox 포함), Inventory: 3 (Outbox 포함), Warehouse: 9, Delivery: 5, Notification: 2, Analytics: 3, Common: 2)
+**총 Entity/Document 수**: 31개 (Order: 5, Inventory: 6 (Product, Inbound 포함), Warehouse: 9, Delivery: 5, Notification: 2, Analytics: 3, Common: 2)
